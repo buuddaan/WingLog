@@ -1,0 +1,44 @@
+# JAVA / MAVEN
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+*.jar
+*.war
+.kotlin
+
+# SPRING BOOT
+application-local.properties
+application-local.yml
+
+# INTELLIJ
+.idea/
+.idea/modules.xml
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/libraries/
+*.iws
+*.iml
+*.ipr
+out/
+
+# VSCODE
+.vscode/
+
+# FLUTTER / DART
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.g.dart
+*.freezed.dart
+
+# MACOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# MILJÖVARIABLER
+.env
+.env.local
