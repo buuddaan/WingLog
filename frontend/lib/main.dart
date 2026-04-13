@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.green),
       ),
-      home: const MyHomePage(title: 'Winglog'),
+      home: const MyHomePage(title: 'Winglog app'),
     );
   }
 }
