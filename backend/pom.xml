@@ -48,6 +48,7 @@
 
     <modules>
         <module>api-gateway</module>
+        <module>audio-service</module>
         <module>auth-service</module>
         <module>forum-service</module>
         <module>geo-service</module>
