@@ -26,6 +26,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
         // Ikonen dyker upp automatiskt när 'drawer' har ett innehåll
+        //Testkommentar
         centerTitle: true,
       ),
 
