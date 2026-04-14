@@ -67,3 +67,5 @@ frontend/build/
 frontend/ios/Pods/
 frontend/macos/Pods/
 frontend/ios/.symlinks/
+frontend/linux/
+frontend/windows/
