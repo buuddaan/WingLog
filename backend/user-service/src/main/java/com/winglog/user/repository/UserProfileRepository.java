@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface UserProfileRepo extends JpaRepository<UserProfile, UUID> {
+public interface UserProfileRepository extends JpaRepository<UserProfile, UUID> {
     Optional<UserProfile> findByUserId(UUID userId); //Ifall vi ej hittar profilen, don't die
     void deleteByUserId(UUID userId);
     boolean existsByUserId(UUID userId);
