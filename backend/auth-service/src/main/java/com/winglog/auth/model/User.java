@@ -2,13 +2,15 @@ package com.winglog.auth.model;
 
 import jakarta.persistence.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "users")
 
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
     @Column(unique = true, nullable = false)
     private String email;
     @Column(unique = true, nullable = false) // måste vara unikt,får inte vara tomt
@@ -19,7 +21,7 @@ public class User {
     public User() {
     }
 
-    public User(String id, String email, String username, String password, String provider) {
+    public User(UUID id, String email, String username, String password, String provider) {
         this.id = id;
         this.email = email;
         this.username = username;
@@ -27,11 +29,11 @@ public class User {
         this.provider = provider;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
