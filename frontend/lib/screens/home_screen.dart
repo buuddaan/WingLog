@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'logbook_screen.dart';
 import 'map_screen.dart';
+import 'Camera_screen.dart';
+import '../main.dart';
 import 'community_screen.dart';
 import 'SoundRecording_screen.dart';
 import 'welcome_screen.dart';
@@ -19,10 +21,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
 
-  static final List<Widget> _pages = <Widget>[  
+  late final List<Widget> _pages = <Widget>[  
     const WelcomeScreen(), // Sidan 0: Din nya landningssida
     const MapScreen(),     // Sidan 1: Din interaktiva karta
-    const LogbookScreen(), // Sidan 2: Loggboken
+    CameraScreen(cameras: cameras), // Sidan 2: Camera
     const CommunityScreen(), // Sidan 3
     const Center(child: Text('Profil')), // Sidan 4
     const SoundRecordingScreen(),
@@ -70,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Hem'),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Karta'),
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Loggbok'),
+          BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: 'Kamera'),
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
           BottomNavigationBarItem(icon: Icon(Icons.mic), label: 'Spela in'),

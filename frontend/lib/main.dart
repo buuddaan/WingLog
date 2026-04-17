@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/SoundRecording_screen.dart';
 import 'screens/home_screen.dart';
+import 'package:camera/camera.dart';
+import 'screens/Camera_screen.dart';
 
-void main() {
+//En globallista för kameror
+List<CameraDescription> cameras = [];
+
+// async säkerställer att appen väntar tills kameror är identifierade
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    cameras = await availableCameras();
+  } catch (e){
+    print("Kamerafel vid start: $e");
+  }
   runApp(const MyApp());
 }
 
