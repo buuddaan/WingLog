@@ -42,3 +42,30 @@ build/
 # MILJÖVARIABLER
 .env
 .env.local
+
+
+
+
+### Flutter / Dart ###
+# Generated plugin registrants
+**/flutter/generated_plugin_registrant.cc
+**/flutter/generated_plugin_registrant.h
+**/flutter/generated_plugins.cmake
+**/Flutter/GeneratedPluginRegistrant.swift
+**/Flutter/GeneratedPluginRegistrant.h
+
+# Dart tool cache
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+
+# Build output
+frontend/build/
+
+# iOS/macOS CocoaPods
+frontend/ios/Pods/
+frontend/macos/Pods/
+frontend/ios/.symlinks/
+frontend/linux/
+frontend/windows/
