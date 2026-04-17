@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/SoundRecording_screen.dart';
 import 'screens/home_screen.dart';
 
 
@@ -23,7 +24,8 @@ class MyApp extends StatelessWidget {
         ),
       ),
       // Här pekar vi på klassen som ligger i home_screen.dart
-      home: const MyHomePage(title: 'WingLog'),
+      home: const MyHomePage(title: 'Winglog'),
+
     );
   }
 }

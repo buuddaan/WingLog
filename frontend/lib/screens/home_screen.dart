@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'logbook_screen.dart';
 import 'map_screen.dart';
+import 'SoundRecording_screen.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -18,6 +19,7 @@ class _MyHomePageState extends State<MyHomePage> {
     const LogbookScreen(),
     const Center(child: Text('Forum')),
     const Center(child: Text('Profil')),
+    const SoundRecordingScreen(),
   ];
 
   @override
@@ -67,6 +69,8 @@ class _MyHomePageState extends State<MyHomePage> {
           BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Loggbok'),
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+          BottomNavigationBarItem(icon: Icon(Icons.mic), label: 'Spela in'),
+
         ],
       ),
     );
