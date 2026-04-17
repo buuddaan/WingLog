@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
+import 'package:camera/camera.dart';
+import 'screens/Camera_screen.dart';
 
+//En globallista för kameror
+List<CameraDescription> cameras = [];
 
-
-void main() {
+// async säkerställer att appen väntar tills kameror är identifierade
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    cameras = await availableCameras();
+  } catch (e){
+    print("Kamerafel vid start: $e");
+  }
   runApp(const MyApp());
 }
 

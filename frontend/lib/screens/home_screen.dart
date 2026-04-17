@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'logbook_screen.dart';
 import 'map_screen.dart';
+import 'Camera_screen.dart';
+import '../main.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -13,9 +15,11 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
 
-  static final List<Widget> _pages = <Widget>[
+  //Bytte från static till late då kamerasidan kräver att de identifierade kamerorna finns innan man kan klicka till kamerasidan
+  late final List<Widget> _pages = <Widget>[
     const Center(child: Text('Karta - kopplas till Nominatim snart')),
     const LogbookScreen(),
+    CameraScreen(cameras: cameras),
     const Center(child: Text('Forum')),
     const Center(child: Text('Profil')),
   ];
@@ -65,6 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Karta'),
           BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Loggbok'),
+          BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: 'Kamera'),
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
         ],
