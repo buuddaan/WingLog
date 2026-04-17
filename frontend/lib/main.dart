@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 
-
-
 void main() {
   runApp(const MyApp());
 }
@@ -14,6 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'WingLog',
+      debugShowCheckedModeBanner: false, // Tar bort debug-banderollen
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -22,7 +21,7 @@ class MyApp extends StatelessWidget {
           surface: const Color(0xFFF5F5DC),
         ),
       ),
-      // Här pekar vi på klassen som ligger i home_screen.dart
+      //
       home: const MyHomePage(title: 'WingLog'),
     );
   }
