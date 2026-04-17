@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'logbook_screen.dart';
 import 'map_screen.dart';
+import 'welcome_screen.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -13,11 +14,15 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
 
+
+
+
   static final List<Widget> _pages = <Widget>[
-    const Center(child: Text('Karta - kopplas till Nominatim snart')),
-    const LogbookScreen(),
-    const Center(child: Text('Forum')),
-    const Center(child: Text('Profil')),
+    const WelcomeScreen(), // Sidan 0: Din nya landningssida
+    const MapScreen(),     // Sidan 1: Din interaktiva karta
+    const LogbookScreen(), // Sidan 2: Loggboken
+    const Center(child: Text('Forum')), // Sidan 3
+    const Center(child: Text('Profil')), // Sidan 4
   ];
 
   @override
@@ -25,8 +30,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
-        // Ikonen dyker upp automatiskt när 'drawer' har ett innehåll
-        //Testkommentar
         centerTitle: true,
       ),
 
@@ -57,12 +60,12 @@ class _MyHomePageState extends State<MyHomePage> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
-        // VIKTIGT: Alla ikoner syns samtidigt
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF2D5A27), // Grön när vald
-        unselectedItemColor: Colors.grey,           // Grå när ej vald
+        selectedItemColor: const Color(0xFF2D5A27),
+        unselectedItemColor: Colors.grey,
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Hem'),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Karta'),
           BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Loggbok'),
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
