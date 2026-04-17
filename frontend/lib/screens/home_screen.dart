@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'logbook_screen.dart';
 import 'map_screen.dart';
+import 'community_screen.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -16,7 +17,7 @@ class _MyHomePageState extends State<MyHomePage> {
   static final List<Widget> _pages = <Widget>[
     const Center(child: Text('Karta - kopplas till Nominatim snart')),
     const LogbookScreen(),
-    const Center(child: Text('Forum')),
+    const CommunityScreen(),
     const Center(child: Text('Profil')),
   ];
 
@@ -67,6 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
           BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Loggbok'),
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+      
         ],
       ),
     );
