@@ -3,6 +3,9 @@ import 'logbook_screen.dart';
 import 'map_screen.dart';
 import 'Camera_screen.dart';
 import '../main.dart';
+import 'community_screen.dart';
+import 'SoundRecording_screen.dart';
+import 'welcome_screen.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -15,13 +18,16 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
 
-  //Bytte från static till late då kamerasidan kräver att de identifierade kamerorna finns innan man kan klicka till kamerasidan
-  late final List<Widget> _pages = <Widget>[
-    const Center(child: Text('Karta - kopplas till Nominatim snart')),
-    const LogbookScreen(),
-    CameraScreen(cameras: cameras),
-    const Center(child: Text('Forum')),
-    const Center(child: Text('Profil')),
+
+
+
+  late final List<Widget> _pages = <Widget>[  
+    const WelcomeScreen(), // Sidan 0: Din nya landningssida
+    const MapScreen(),     // Sidan 1: Din interaktiva karta
+    CameraScreen(cameras: cameras), // Sidan 2: Camera
+    const CommunityScreen(), // Sidan 3
+    const Center(child: Text('Profil')), // Sidan 4
+    const SoundRecordingScreen(),
   ];
 
   @override
@@ -29,8 +35,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
-        // Ikonen dyker upp automatiskt när 'drawer' har ett innehåll
-        //Testkommentar
         centerTitle: true,
       ),
 
@@ -61,17 +65,18 @@ class _MyHomePageState extends State<MyHomePage> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
-        // VIKTIGT: Alla ikoner syns samtidigt
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF2D5A27), // Grön när vald
-        unselectedItemColor: Colors.grey,           // Grå när ej vald
+        selectedItemColor: const Color(0xFF2D5A27),
+        unselectedItemColor: Colors.grey,
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Hem'),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Karta'),
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Loggbok'),
           BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: 'Kamera'),
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+          BottomNavigationBarItem(icon: Icon(Icons.mic), label: 'Spela in'),
+
         ],
       ),
     );

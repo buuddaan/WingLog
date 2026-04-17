@@ -58,3 +58,6 @@ application-local.yml
 
 .env
 .env.local
+
+**/application-local.properties
+*-local.properties

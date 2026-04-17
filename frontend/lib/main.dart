@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/SoundRecording_screen.dart';
 import 'screens/home_screen.dart';
 import 'package:camera/camera.dart';
 import 'screens/Camera_screen.dart';
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'WingLog',
+      debugShowCheckedModeBanner: false, // Tar bort debug-banderollen
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -33,7 +35,8 @@ class MyApp extends StatelessWidget {
         ),
       ),
       // Här pekar vi på klassen som ligger i home_screen.dart
-      home: const MyHomePage(title: 'WingLog'),
+      home: const MyHomePage(title: 'Winglog'),
+
     );
   }
 }

@@ -14,7 +14,6 @@ class _LogbookScreenState extends State<LogbookScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Bakgrundsfärg
       backgroundColor: const Color(0xFFF5F5DC),
 
       body: Padding(
@@ -27,7 +26,7 @@ class _LogbookScreenState extends State<LogbookScreen> {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2D5A27), // Skogsgrön
+                color: Color(0xFF2D5A27), // Nice Skogsgrön
               ),
             ),
             const SizedBox(height: 20),
@@ -57,7 +56,7 @@ class _LogbookScreenState extends State<LogbookScreen> {
         ),
       ),
 
-      // En egen knapp för loggboken (t.ex. för att lägga till ett nytt fynd)
+      // Knapp för loggboken (t.ex. för att lägga till ett nytt fynd)
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Här kan vi trigga kameran
