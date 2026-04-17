@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'logbook_screen.dart';
 import 'map_screen.dart';
+import 'community_screen.dart';
 import 'SoundRecording_screen.dart';
 import 'welcome_screen.dart';
 
@@ -22,7 +23,7 @@ class _MyHomePageState extends State<MyHomePage> {
     const WelcomeScreen(), // Sidan 0: Din nya landningssida
     const MapScreen(),     // Sidan 1: Din interaktiva karta
     const LogbookScreen(), // Sidan 2: Loggboken
-    const Center(child: Text('Forum')), // Sidan 3
+    const CommunityScreen(), // Sidan 3
     const Center(child: Text('Profil')), // Sidan 4
     const SoundRecordingScreen(),
   ];
