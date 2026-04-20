@@ -3,7 +3,7 @@ package com.winglog.user.service;
 import com.winglog.user.dto.request.CreateProfileRequest;
 import com.winglog.user.dto.request.UpdateProfileRequest;
 import com.winglog.user.dto.response.UserProfileResponse;
-import com.winglog.user.database.UserProfile;
+import com.winglog.user.model.UserProfile;
 import com.winglog.user.repository.UserProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,6 +78,6 @@ public class UserService {
 
         //TODO: Anropa auth-service för att radera credentials:
         // DELETE http://auth-service:8081/internal/users/{userId}
-        // Läggs till när auth-service har den endpointen klar
+        // Läggs till när auth-service har den end-pointen klar
     }
 }

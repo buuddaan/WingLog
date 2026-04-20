@@ -1,4 +1,4 @@
-package com.winglog.user.database;
+package com.winglog.user.model;
 
 import jakarta.persistence.*; //Bra på att omvandla JSON/XML till java-klasser
 import java.time.LocalDateTime;

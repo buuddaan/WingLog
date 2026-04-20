@@ -1,7 +1,7 @@
 package com.winglog.user.repository;
 //Databas-accessen /EF
 
-import com.winglog.user.database.UserProfile;
+import com.winglog.user.model.UserProfile;
 import org.springframework.data.jpa.repository.JpaRepository; //Ger save(), findById(), deleteById(), findAll() mm
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
