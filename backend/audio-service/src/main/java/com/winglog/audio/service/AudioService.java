@@ -2,41 +2,58 @@ package com.winglog.audio.service;
 
 import com.winglog.audio.model.AudioRecord;
 import com.winglog.audio.repository.AudioRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import java.util.List;
 
-// Markerar att detta är service-lagret - all logik finns här
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 @Service
 public class AudioService {
 
-    // Repository används för att kommunicera med databasen
     private final AudioRepository audioRepository;
+    private final RestTemplate restTemplate = new RestTemplate();
 
-    // Spring injicerar repository automatiskt via constructor
+    @Value("${birdnet.url}")
+    private String birdnetUrl;
+
     public AudioService(AudioRepository audioRepository) {
         this.audioRepository = audioRepository;
     }
 
-    // Tar emot en ljudfil, identifierar fågeln och sparar resultatet i databasen
-    public AudioRecord identify(MultipartFile file) {
+    public AudioRecord identify(MultipartFile file) throws IOException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-        // Skapar ett nytt AudioRecord-objekt som ska sparas
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new ByteArrayResource(file.getBytes()) {
+            @Override
+            public String getFilename() {
+                return file.getOriginalFilename();
+            }
+        });
+
+        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
+        Map<String, Object> response = restTemplate.postForObject(birdnetUrl + "/analyze", request, Map.class);
+
         AudioRecord record = new AudioRecord();
-
-        // Sätter filnamnet från den uppladdade filen
         record.setFileName(file.getOriginalFilename());
+        record.setBirdName((String) response.get("birdName"));
+        record.setScientificName((String) response.get("scientificName"));
+        record.setConfidence(((Number) response.get("confidence")).doubleValue());
 
-        // Mock - hårdkodat svar istället för riktigt BirdNET-anrop
-        record.setBirdName("Koltrast");
-        record.setScientificName("Turdus merula");
-        record.setConfidence(0.94);
-
-        // Sparar i databasen och returnerar det sparade objektet
         return audioRepository.save(record);
     }
 
-    // Hämtar alla tidigare identifieringar från databasen
     public List<AudioRecord> getHistory() {
         return audioRepository.findAll();
     }
