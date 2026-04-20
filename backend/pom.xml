@@ -69,6 +69,8 @@
         <module>media-service</module>
         <module>post-service</module>
         <module>user-service</module>
+        <module>shared</module>
+
     </modules>
 
     <build>

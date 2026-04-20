@@ -1,4 +1,4 @@
-package com.winglog.auth.util;
+package com.winglog.shared.util;
 
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
