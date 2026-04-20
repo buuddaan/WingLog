@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'logbook_screen.dart';
+import 'logbook_screen.dart'; // Inte aktiv
 import 'map_screen.dart';
 import 'Camera_screen.dart';
 import '../main.dart';
@@ -8,7 +8,12 @@ import 'SoundRecording_screen.dart';
 import 'welcome_screen.dart';
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  // Lägg till onLogout här:
+  final VoidCallback onLogout;
+
+  // Uppdatera konstruktorn för att kräva den:
+  const MyHomePage({super.key, required this.title, required this.onLogout});
+
   final String title;
 
   @override
@@ -21,13 +26,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
 
-  late final List<Widget> _pages = <Widget>[  
-    const WelcomeScreen(), // Sidan 0: Din nya landningssida
+  late final List<Widget> _pages = <Widget>[
+    // SIDAN 0: Byt ut WelcomeScreen mot en enkel inloggad vy
+    const Center(
+      child: Text(
+        'Välkommen till WingLog!\n\nDu är nu inloggad.',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 20, color: Color(0xFF2D5A27), fontWeight: FontWeight.bold),
+      ),
+    ),
     const MapScreen(),     // Sidan 1: Din interaktiva karta
-    CameraScreen(cameras: cameras), // Sidan 2: Camera
-    const CommunityScreen(), // Sidan 3
-    const Center(child: Text('Profil')), // Sidan 4
-    const SoundRecordingScreen(),
+    CameraScreen(cameras: cameras), // Sidan 2: Kamera (OBS: Kräver att 'cameras' är definierad)
+    const CommunityScreen(), // Sidan 3: Forum
+    const Center(child: Text('Profil')), // Sidan 4: Profil
+    const SoundRecordingScreen(), // Sidan 5: Ljudinspelning
   ];
 
   @override
@@ -54,6 +66,19 @@ class _MyHomePageState extends State<MyHomePage> {
                 title: const Text('Inställningar'),
                 onTap: () => Navigator.pop(context),
               ),
+              // --- NY KOD BÖRJAR HÄR ---
+              const Divider(), // En liten visuell avdelare
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text('Logga ut', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  // Stäng menyn först
+                  Navigator.pop(context);
+                  // Anropa utloggningsfunktionen från main.dart
+                  widget.onLogout();
+                },
+              ),
+              // --- NY KOD SLUTAR HÄR ---
             ],
           ),
         ),
