@@ -1,6 +1,6 @@
 package com.winglog.user.dto.response;
 
-import com.winglog.user.database.UserProfile;
+import com.winglog.user.model.UserProfile;
 import java.util.UUID;
 
 public class UserProfileResponse {
