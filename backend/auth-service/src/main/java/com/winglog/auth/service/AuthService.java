@@ -5,7 +5,7 @@ import com.winglog.auth.dto.LoginRequest;
 import com.winglog.auth.dto.RegisterRequest;
 import com.winglog.auth.model.User;
 import com.winglog.auth.repository.UserRepository;
-import com.winglog.auth.util.JwtUtil;
+import com.winglog.shared.util.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
