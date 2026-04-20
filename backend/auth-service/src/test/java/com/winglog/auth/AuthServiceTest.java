@@ -2,7 +2,7 @@ package com.winglog.auth;
 
 import com.winglog.auth.repository.UserRepository;
 import com.winglog.auth.service.AuthService;
-import com.winglog.auth.util.JwtUtil;
+import com.winglog.shared.util.JwtUtil;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
