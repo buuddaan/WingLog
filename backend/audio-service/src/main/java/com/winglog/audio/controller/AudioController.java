@@ -5,6 +5,8 @@ import com.winglog.audio.service.AudioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.util.List;
 
 // Markerar att detta är ett REST API - svarar med JSON
@@ -24,7 +26,7 @@ public class AudioController {
     // POST /audio/identify
     // Tar emot en ljudfil och returnerar identifieringsresultatet
     @PostMapping("/identify")
-    public ResponseEntity<AudioRecord> identify(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<AudioRecord> identify(@RequestParam("file") MultipartFile file) throws IOException {
         AudioRecord result = audioService.identify(file);
         return ResponseEntity.ok(result);
     }
