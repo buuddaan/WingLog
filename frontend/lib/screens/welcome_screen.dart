@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'home_screen.dart';
@@ -24,7 +25,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   // URL till din API Gateway (justera porten om den skiljer sig)
   // Ändra denna rad byte mellan olika OS
-  final String _baseUrl = 'http://localhost:8080/api/auth';
+  final String _baseUrl = 'http://localhost:8081/api/auth';
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
@@ -66,6 +67,36 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       );
     }
   }
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email'],
+  );
+
+  Future<void> _handleGoogleSignIn() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return; // Användaren avbröt
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final String? idToken = googleAuth.idToken; // Detta är den token vi skickar till backend
+
+      final response = await http.post(
+        Uri.parse('$_baseUrl/google'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'idToken': idToken}),
+      );
+
+      if (response.statusCode == 200) {
+        widget.onLoginSuccess();
+      } else {
+        throw Exception('Google-inloggning misslyckades i backend');
+      }
+    } catch (error) {
+      print(error);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kunde inte logga in med Google')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +117,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF2D5A27)),
                 ),
                 const SizedBox(height: 32),
+                OutlinedButton.icon(
+                  onPressed: _handleGoogleSignIn,
+                  icon: const Icon(Icons.login),
+                  label: const Text('Logga in med Google'),
+                  style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+                ),
 
                 // Användarnamn
                 TextFormField(
