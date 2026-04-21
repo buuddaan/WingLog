@@ -9,6 +9,11 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
+    private final GoogleAuthHandler googleAuthHandler;
+
+    public SecurityConfig(GoogleAuthHandler googleAuthHandler){
+        this.googleAuthHandler = googleAuthHandler;
+    }
 
     /**
      * skapar och definerar en PasswordEncoder för att kunna kryptera lösenord
@@ -35,8 +40,11 @@ public class SecurityConfig {
                 .permitAll()
                 .anyRequest()
                 .authenticated())
-                .csrf(csrf -> csrf.disable());
+                .csrf(csrf -> csrf.disable())
+                .oauth2Login(oauth2 -> oauth2.successHandler(googleAuthHandler));
 
                 return http.build();
     }
+
+
 }
