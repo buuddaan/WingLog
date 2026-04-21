@@ -20,7 +20,6 @@ public class UserProfile {
     @Column(name = "bio", columnDefinition = "TEXT") //Frivillig?
     private String bio;
 
-
     @Column(name = "profile_photo_url", length = 500) //URL till profilbild fr Cloudflare R2 (via media-service)? Ska kunna = null
     private String profilePhotoUrl;
 
@@ -43,13 +42,11 @@ public class UserProfile {
 
     public UserProfile() {} //Krävs av JPA för att kunna skapa obj från db-rader
 
-    //Föör att kunna skapa ny profil vid registrering
     public UserProfile(UUID userId, String displayName) {
         this.userId = userId;
         this.displayName = displayName;
+        //bio och profilePhotoUrl = null automatiskt, kan sättas senare? /EF
     }
-
-
 
     public UUID getUserId() { return userId; }
     public String getDisplayName() { return displayName; }
