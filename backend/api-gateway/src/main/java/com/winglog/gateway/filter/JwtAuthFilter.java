@@ -65,6 +65,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String email = jwtUtil.readEmail(token);
         request.setAttribute("X-User-Email", email);
 
+        // TODO: Läs ut userId från JWT och skicka vidare som X-User-Id header /EF
+        //  --> readUserId() finns i JwtUtil.java i shared-modulen, klar att användas
+        //  --> Lägg till: String userId = jwtUtil.readUserId(token);
+        //  --> Lägg till: request.setAttribute("X-User-Id", userId);
+        //  --> Utan detta når userId aldrig user-service och stateless-arkitekturen fungerar ej fullt ut
+
         //Släpp igenom till controller
         filterChain.doFilter(request, response);
     }
