@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -38,8 +39,8 @@ public class AuthServiceTest {
         when(userRepository.existsByEmail("test123@test.com")).thenReturn(false);
         when(userRepository.existsByUsername("testUsername")).thenReturn(false);
         when(passwordEncoder.encode("testPassword")).thenReturn("KrypteratPassword");
-        when(jwtUtil.generateToken("test123@test.com")).thenReturn("FejkToken");
-
+        when(userRepository.save(any())).thenAnswer(i -> { User u = i.getArgument(0); u.setId(java.util.UUID.randomUUID()); return u; });
+        when(jwtUtil.generateToken(any(), any())).thenReturn("FejkToken");
         AuthResponse result = authService.register(request);
 
         Assertions.assertNotNull(result);
@@ -75,11 +76,11 @@ public class AuthServiceTest {
         user.setUsername("testUsername");
         user.setEmail("test123@test.com");
         user.setPassword("testPassword");
+        user.setId(java.util.UUID.randomUUID());
 
         when(userRepository.findByUsername("testUsername")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("testPassword", "testPassword")).thenReturn(true);
-        when(jwtUtil.generateToken("test123@test.com")).thenReturn("FejkToken");
-
+        when(jwtUtil.generateToken(any(), any())).thenReturn("FejkToken");
         AuthResponse result = authService.login(request);
         Assertions.assertNotNull(result);
         Assertions.assertEquals("FejkToken", result.getToken());

@@ -45,8 +45,8 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setProvider("local");
 
-        userRepository.save(user);
-        String token = jwtUtil.generateToken(user.getEmail());
+        user = userRepository.save(user); // Hämtar tillbaka användaren med det DB-genererade UUID:t /EF
+        String token = jwtUtil.generateToken(user.getEmail(), user.getId().toString()); // userId bakas in i JWT för stateless identifiering /EF
         return new AuthResponse(token);
     }
 
@@ -65,7 +65,7 @@ public class AuthService {
         if (!(passwordEncoder.matches(request.getPassword(), user.get().getPassword()))) {
             throw new RuntimeException("Fel lösenord");
         }
-        String token = jwtUtil.generateToken(user.get().getEmail());
+        String token = jwtUtil.generateToken(user.get().getEmail(), user.get().getId().toString()); // userId bakas in i JWT för stateless identifiering /EF
         return new AuthResponse(token);
     }
 

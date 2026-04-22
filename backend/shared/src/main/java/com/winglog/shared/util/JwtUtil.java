@@ -23,9 +23,10 @@ public class JwtUtil {
      * @param email som är kopplad till användaren
      * @return en unik JWT-Token som är giltig i 24 timmar från att den genereras.
      */
-    public String generateToken(String email) {
+    public String generateToken(String email, String userId) {
         return Jwts.builder()
                 .subject(email)
+                .claim("userId", userId) // userId bakas in i JWT så varje service kan ID användaren utan att fråga databasen (stateless) /EF
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
@@ -45,6 +46,15 @@ public class JwtUtil {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+    }
+    // Hämtar ut användarens userId (UUID) från JWT-token. Används i JwtAuthFilter i api-gateway för att sätta X-User-Id header så alla services kan identifiera anv direkt /EF
+    public String readUserId(String token) {
+        return Jwts.parser()
+                .verifyWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("userId", String.class); // Läser ut userId-claimet som lades till i generateToken() metoden /EF
     }
 
     /**

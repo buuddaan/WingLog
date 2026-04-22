@@ -47,10 +47,10 @@ public class GoogleAuthHandler implements AuthenticationSuccessHandler {
            user.setProvider("google");
            user.setUsername(username);
 
-           userRepository.save(user);
+            authUser = Optional.of(userRepository.save(user));
         }
 
-        String token = jwtUtil.generateToken(email);
+        String token = jwtUtil.generateToken(email, authUser.get().getId().toString());
         response.sendRedirect("http://localhost:8080?token=" + token);
     }
 }
