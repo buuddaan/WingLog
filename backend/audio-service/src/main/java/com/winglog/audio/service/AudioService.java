@@ -21,13 +21,14 @@ import java.util.Map;
 public class AudioService {
 
     private final AudioRepository audioRepository;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     @Value("${birdnet.url}")
     private String birdnetUrl;
 
-    public AudioService(AudioRepository audioRepository) {
+    public AudioService(AudioRepository audioRepository, RestTemplate restTemplate) {
         this.audioRepository = audioRepository;
+        this.restTemplate = restTemplate;
     }
 
     public AudioRecord identify(MultipartFile file) throws IOException {
@@ -44,6 +45,10 @@ public class AudioService {
 
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
         Map<String, Object> response = restTemplate.postForObject(birdnetUrl + "/analyze", request, Map.class);
+
+        if (response == null) {
+            throw new RuntimeException("BirdNET svarade inte");
+        }
 
         AudioRecord record = new AudioRecord();
         record.setFileName(file.getOriginalFilename());
