@@ -34,6 +34,9 @@ public class RoutingController {
     @Value("${media-service.url}")
     private String mediaServiceUrl;
 
+    @Value("${audio-service.url}")
+    private String audioServiceUrl;
+
     public RoutingController() {
         this.restClient = RestClient.create();
     }
@@ -52,8 +55,9 @@ public class RoutingController {
             return ResponseEntity.notFound().build();
         }
 
-        // Hämta email som JwtAuthFilter lade på requesten
+        // Hämta email och userId som JwtAuthFilter lade på requesten /EF
         String userEmail = (String) request.getAttribute("X-User-Email");
+        String userId = (String) request.getAttribute("X-User-Id");
 
         // Bygg och skicka vidare requesten
         RestClient.RequestBodySpec requestSpec = restClient
@@ -61,9 +65,14 @@ public class RoutingController {
                 .uri(targetUrl)
                 .header("Content-Type", "application/json");
 
-        // Lägg till användarens email om den finns (dvs om användaren är inloggad)
+        // Vidarebefordra email om den finns /EF
         if (userEmail != null) {
             requestSpec.header("X-User-Email", userEmail);
+        }
+
+        // Vidarebefordra userId så downstream-services kan identifiera användaren /EF
+        if (userId != null) {
+            requestSpec.header("X-User-Id", userId);
         }
 
         // Lägg till body om det finns en (POST/PUT)
@@ -83,6 +92,7 @@ public class RoutingController {
      * /gateway/forums/** → forum-service
      * /gateway/sightings/** → geo-service
      * /gateway/media/**  → media-service
+     * /gateway/audio/**  → audio-service
      */
     private String resolveTargetUrl(String path) {
         // Ta bort /gateway-prefixet
@@ -100,6 +110,8 @@ public class RoutingController {
             return geoServiceUrl + strippedPath;
         } else if (strippedPath.startsWith("/media")) {
             return mediaServiceUrl + strippedPath;
+        } else if (strippedPath.startsWith("/audio")) {
+            return audioServiceUrl + strippedPath;
         }
 
         return null;
