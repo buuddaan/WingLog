@@ -25,7 +25,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   // URL till din API Gateway (justera porten om den skiljer sig)
   // Ändra denna rad byte mellan olika OS
-  final String _baseUrl = 'http://localhost:8081/api/auth';
+  final String _baseUrl = 'http://localhost:8080/api/auth';
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
@@ -70,7 +70,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email'],
   );
-
+// Kolla med backend om de aktiveras direkt där och
+// endast behöver starta process samt hämta token istället.
+// Kolla token i shared, kolla i auth-service/config/google-auth-handler
   Future<void> _handleGoogleSignIn() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();

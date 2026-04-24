@@ -37,6 +37,15 @@ end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
-    flutter_additional_macos_build_settings(target)
+
+    # 1. Vi kommenterar bort Flutters trasiga kommando:
+    # flutter_additional_macos_build_settings(target)
+
+    # 2. Vi lägger in inställningarna manuellt för att Macen ska bli nöjd:
+    target.build_configurations.each do |config|
+      config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '10.14'
+      config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+    end
+
   end
 end
