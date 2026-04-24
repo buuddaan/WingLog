@@ -25,7 +25,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   // URL till din API Gateway (justera porten om den skiljer sig)
   // Ändra denna rad byte mellan olika OS
-  final String _baseUrl = 'http://localhost:8080/api/auth';
+  final String _baseUrl = 'http://localhost:8080/gateway/auth';
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
