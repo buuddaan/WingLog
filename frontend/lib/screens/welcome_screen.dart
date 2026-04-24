@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+// import 'package:google_sign_in/google_sign_in.dart'; EF TEST
+import 'package:web/web.dart' as web; // EF TEST
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'home_screen.dart';
@@ -67,13 +68,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       );
     }
   }
+  /*
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email'],
   );
 // Kolla med backend om de aktiveras direkt där och
 // endast behöver starta process samt hämta token istället.
 // Kolla token i shared, kolla i auth-service/config/google-auth-handler
-  Future<void> _handleGoogleSignIn() async {
+
+   Future<void> _handleGoogleSignIn() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return; // Användaren avbröt
@@ -98,6 +101,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         const SnackBar(content: Text('Kunde inte logga in med Google')),
       );
     }
+  }
+*/ //EF TEST
+
+  // Test för att se om inlogg funkar mot backend flödet /EF
+  void _handleGoogleSignIn() {
+    web.window.location.href = 'http://localhost:8081/oauth2/authorization/google';
   }
 
   @override
