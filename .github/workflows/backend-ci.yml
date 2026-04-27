@@ -1,0 +1,38 @@
+# CI-pipeline för backend — körs vid push och PR mot main /EF
+name: Backend CI
+
+# Definierar när workflowen triggas /EF
+on:
+  push:
+    paths:
+      - 'backend/**'   # Endast om filer i backend/ ändrades /EF
+  pull_request:
+    branches:
+      - main           # Grindvakt — blockerar merge om tester misslyckas /EF
+    paths:
+      - 'backend/**'
+
+# Ett jobb = en virtuell maskin som GitHub startar /EF
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest   # Fräsch Linux-miljö vid varje körning /EF
+
+    steps:
+      # Klonar repot in i den virtuella maskinen /EF
+      - name: Checka ut koden
+        uses: actions/checkout@v4
+
+      # Installerar Java 25 på CI-maskinen (finns inte där från start) /EF
+      # cache: maven = sparar nedladdade beroenden mellan körningar /EF
+      - name: Sätt upp Java 25
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Kör från backend/ där rot-pom.xml ligger /EF
+      # clean = river gamla byggartefakter, test = kompilerar + kör enhetstester /EF
+      - name: Bygg och testa med Maven
+        working-directory: backend
+        run: ./mvnw clean test
