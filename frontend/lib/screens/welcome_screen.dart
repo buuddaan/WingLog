@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web; // EF TEST
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'home_screen.dart';
+import '../services/token_service.dart';
 
 class WelcomeScreen extends StatefulWidget {
   final VoidCallback onLoginSuccess; // Denna tar emot _handleLoginSuccess från main
@@ -51,6 +51,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (!mounted) return;
 
+        //plockar ut token från response och spara
+        final data = jsonDecode(response.body);
+        final token = data['token'];
+        await TokenService.saveToken(token);
+
         // Visar det lilla bekräftelse-meddelandet
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(_isLogin ? 'Välkommen tillbaka!' : 'Konto skapat!'))
@@ -58,6 +63,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
         // HÄR ÄR MAGIN: Navigera vidare till huvudappen!
         widget.onLoginSuccess();
+
 
       } else {
         throw Exception('Fel vid anslutning');

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'logbook_screen.dart'; // Inte aktiv
+// Inte aktiv
 import 'map_screen.dart';
 import 'Camera_screen.dart';
 import '../main.dart';
 import 'community_screen.dart';
 import 'SoundRecording_screen.dart';
-import 'welcome_screen.dart';
 
 class MyHomePage extends StatefulWidget {
   // Lägg till onLogout här:

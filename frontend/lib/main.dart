@@ -3,6 +3,7 @@ import 'screens/home_screen.dart';
 import 'screens/welcome_screen.dart';
 
 import 'package:camera/camera.dart';
+import 'services/token_service.dart';
 
 List<CameraDescription> cameras = []; // Denna variabel ropar home_screen.dart på!
 
@@ -27,16 +28,34 @@ class _MyAppState extends State<MyApp> {
   // 1. Variabeln som styr om vi ser Login eller Homepage
   bool _isLoggedIn = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _checkGoogleToken();
+  }
+
+  // kolla om google skickade med token i URL efter redirect
+  void _checkGoogleToken() async {
+    final uri = Uri.base;
+    final token = uri.queryParameters['token'];
+    if (token != null){
+      await TokenService.saveToken(token);
+      setState(() => _isLoggedIn = true);
+    }
+  }
+
   // 2. Funktion som anropas från WelcomeScreen vid lyckad inloggning/reg
   void _handleLoginSuccess() {
     setState(() {
       _isLoggedIn = true;
     });
   }
-  void _handleLogout() {
+  void _handleLogout() async {
+    await TokenService.deleteToken();
     setState(() {
       _isLoggedIn = false;
     });
+
   }
 
   @override
