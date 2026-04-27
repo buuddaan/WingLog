@@ -11,7 +11,7 @@ import java.util.List;
 
 // Markerar att detta är ett REST API - svarar med JSON
 @RestController
-// Alla endpoints i den här klassen börjar med /audio
+@CrossOrigin(origins = "*")
 @RequestMapping("/audio")
 public class AudioController {
 
