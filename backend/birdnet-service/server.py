@@ -17,12 +17,24 @@ def analyze():
 
     audio_file = request.files["file"]
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+    ext = os.path.splitext(audio_file.filename)[1] or ".tmp"
+    with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
         audio_file.save(tmp.name)
         tmp_path = tmp.name
 
     try:
-        audio, rate = sf.read(tmp_path)
+        try:
+            audio, rate = sf.read(tmp_path)
+        except Exception:
+            import av as pyav
+            container = pyav.open(tmp_path)
+            stream = container.streams.audio[0]
+            rate = stream.codec_context.sample_rate
+            frames = []
+            for frame in container.decode(audio=0):
+                frames.append(frame.to_ndarray().flatten().astype(np.float32) / 32768.0)
+            container.close()
+            audio = np.concatenate(frames)
         if audio.ndim > 1:
             audio = audio.mean(axis=1)
 

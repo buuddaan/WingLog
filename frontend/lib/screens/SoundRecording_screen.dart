@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'dart:convert';
 //import 'package:flutter/cupertino.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:record/record.dart';
 import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:http/http.dart' as http;
 
 class SoundRecordingScreen extends StatelessWidget{
     const SoundRecordingScreen ({super.key});
@@ -76,17 +78,44 @@ class _ListeningScreenState extends State<ListeningScreen>
   Future<void> _startRecordingFlow() async {
     await _startRecording();
 
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 5));
 
     final path = await _stopRecording();
 
     if (!mounted) return;
+
+    Map<String, dynamic>? birdResult;
+
+    if (path != null) {
+      try {
+        final uri = Uri.parse('http://localhost:8087/audio/identify');
+        final request = http.MultipartRequest('POST', uri);
+
+        if (kIsWeb) {
+          final response = await http.get(Uri.parse(path));
+          request.files.add(http.MultipartFile.fromBytes(
+            'file',
+            response.bodyBytes,
+            filename: 'recording.m4a',
+          ));
+        } else {
+          request.files.add(await http.MultipartFile.fromPath('file', path));
+        }
+
+        final streamedResponse = await request.send();
+        final responseBody = await streamedResponse.stream.bytesToString();
+        birdResult = jsonDecode(responseBody);
+      } catch (e) {
+        debugPrint('Fel vid anrop till backend: $e');
+      }
+    }
 
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => RecognitionResultScreen(
           recordedFilePath: path,
+          birdResult: birdResult,
         ),
       ),
     );
@@ -188,10 +217,12 @@ class _ListeningScreenState extends State<ListeningScreen>
 
 class RecognitionResultScreen extends StatefulWidget {
   final String? recordedFilePath;
+  final Map<String, dynamic>? birdResult;
 
   const RecognitionResultScreen({
     super.key,
     this.recordedFilePath,
+    this.birdResult,
   });
 
 
@@ -262,10 +293,29 @@ class _RecognitionResultScreenState extends State<RecognitionResultScreen> {
               ),
 
               const SizedBox(height: 16),
-              const Text(
-                  'Här ska fågeldata från databasen visas senare.',
-                textAlign: TextAlign.center,
-              ),
+              if (widget.birdResult != null) ...[
+                Text(
+                  widget.birdResult!['birdName'] ?? 'Okänd',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.birdResult!['scientificName'] ?? '',
+                  style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${((widget.birdResult!['confidence'] as num) * 100).toStringAsFixed(1)}%',
+                  style: const TextStyle(fontSize: 18),
+                  textAlign: TextAlign.center,
+                ),
+              ] else
+                const Text(
+                  'Kunde inte identifiera fågeln.',
+                  textAlign: TextAlign.center,
+                ),
 
               const SizedBox(height: 20),
               if (widget.recordedFilePath != null)
