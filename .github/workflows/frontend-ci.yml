@@ -1,0 +1,44 @@
+# CI pipeline for the Flutter frontend — runs on push and PR to main /EF
+name: Frontend CI
+
+# Defines when the workflow is triggered /EF
+on:
+  push:
+    paths:
+      - 'frontend/**'   # Only if files in frontend/ were changed /EF
+  pull_request:
+    branches:
+      - main            # Gate — blocks merge if checks fail /EF
+    paths:
+      - 'frontend/**'
+
+# One job = one virtual machine that GitHub spins up /EF
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest   # Fresh Linux environment for every run /EF
+
+    steps:
+      # Clones the repo into the virtual machine /EF
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      # Installs Flutter on the CI machine (not present by default) /EF
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'   # Always use the stable release channel /EF
+
+      # Fetches all Flutter/Dart dependencies defined in pubspec.yaml /EF
+      - name: Install dependencies
+        working-directory: frontend
+        run: flutter pub get
+
+      # Static analysis — catches type errors, bad imports, style issues /EF
+      - name: Analyze
+        working-directory: frontend
+        run: flutter analyze
+
+      # Runs all widget and unit tests in frontend/test/ /EF
+      - name: Run tests
+        working-directory: frontend
+        run: flutter test
