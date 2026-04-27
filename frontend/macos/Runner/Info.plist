@@ -28,5 +28,10 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+
+	<key>NSMicrophoneUsageDescription</key>
+    <string>Appen behöver mikrofonen för att spela in fågelljud.</string>
+
 </dict>
+
 </plist>
