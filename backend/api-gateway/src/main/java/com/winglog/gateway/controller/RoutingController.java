@@ -31,8 +31,8 @@ public class RoutingController {
     @Value("${geo-service.url}")
     private String geoServiceUrl;
 
-    @Value("${media-service.url}")
-    private String mediaServiceUrl;
+    @Value("${photo-service.url}")
+    private String photoServiceUrl;
 
     @Value("${audio-service.url}")
     private String audioServiceUrl;
@@ -83,17 +83,6 @@ public class RoutingController {
         return requestSpec.retrieve().toEntity(String.class);
     }
 
-    /**
-     * Avgör vilken service som ska ta emot requesten baserat på path.
-     * /gateway/auth/**   → auth-service
-     * /gateway/users/**  → user-service
-     * /gateway/posts/**  → post-service
-     * /gateway/feed/**   → post-service
-     * /gateway/forums/** → forum-service
-     * /gateway/sightings/** → geo-service
-     * /gateway/media/**  → media-service
-     * /gateway/audio/**  → audio-service
-     */
     private String resolveTargetUrl(String path) {
         // Ta bort /gateway-prefixet
         String strippedPath = path.replaceFirst("/gateway", "");
@@ -108,8 +97,8 @@ public class RoutingController {
             return forumServiceUrl + strippedPath;
         } else if (strippedPath.startsWith("/sightings") || strippedPath.startsWith("/species")) {
             return geoServiceUrl + strippedPath;
-        } else if (strippedPath.startsWith("/media")) {
-            return mediaServiceUrl + strippedPath;
+        } else if (strippedPath.startsWith("/photos")) {
+            return photoServiceUrl + strippedPath;
         } else if (strippedPath.startsWith("/audio")) {
             return audioServiceUrl + strippedPath;
         }
