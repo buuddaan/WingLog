@@ -66,7 +66,7 @@
         <module>auth-service</module>
         <module>forum-service</module>
         <module>geo-service</module>
-        <module>media-service</module>
+        <module>photo-service</module>
         <module>post-service</module>
         <module>user-service</module>
         <module>shared</module>

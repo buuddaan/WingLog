@@ -30,13 +30,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  camera: ^0.12.0+1 # Lägg till denna rad
-  http: ^1.1.0  # Lägg till denna rad
-  google_sign_in: ^6.1.5
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  record: ^6.1.1
+  path_provider: ^2.1.5
+  audioplayers: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -90,3 +90,4 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
