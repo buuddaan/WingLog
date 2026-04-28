@@ -6,7 +6,7 @@ import java.util.UUID;
 
 //Talar om att det är en databastabell
 @Entity
-@Table(name = "user_profiles")
+@Table(name = "user_profiles", schema = "user_schema")
 
 public class UserProfile {
 
