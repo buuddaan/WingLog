@@ -16,7 +16,7 @@ class _MapScreenState extends State<MapScreen> {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
 
-GoogleMapController? _mapController;
+
 final LatLng _initialPosition = const LatLng(59.3293, 18.0686);
 
 
@@ -27,7 +27,7 @@ final LatLng _initialPosition = const LatLng(59.3293, 18.0686);
       body: Stack(
         children: [
           GoogleMap(
-            onMapCreated: (controller) => _mapController = controller,
+            
             initialCameraPosition: CameraPosition(
               target: _initialPosition,
               zoom: 12,
