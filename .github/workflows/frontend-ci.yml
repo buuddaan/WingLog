@@ -27,7 +27,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'   # Always use the stable release channel /EF
-          flutter-version: '3.29.3'
+          flutter-version: '3.41.8'
 
       # Fetches all Flutter/Dart dependencies defined in pubspec.yaml /EF
       - name: Install dependencies
