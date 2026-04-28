@@ -34,7 +34,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     final endpoint = _isLogin ? '/login' : '/register';
     final url = Uri.parse('$_baseUrl$endpoint');
 
-    // Skapa bodyn baserat på om det är login eller register
     final Map<String, String> body = {
       'username': _usernameController.text,
       'password': _passwordController.text,
@@ -49,26 +48,27 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        if (!mounted) return;
-
-        //plockar ut token från response och spara
+        // Plocka ut token
         final data = jsonDecode(response.body);
         final token = data['token'];
+
         await TokenService.saveToken(token);
 
-        // Visar det lilla bekräftelse-meddelandet
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(_isLogin ? 'Välkommen tillbaka!' : 'Konto skapat!'))
         );
 
-        // HÄR ÄR MAGIN: Navigera vidare till huvudappen!
         widget.onLoginSuccess();
-
 
       } else {
         throw Exception('Fel vid anslutning');
       }
     } catch (e) {
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Kunde inte nå WingLog-servern')),
       );
