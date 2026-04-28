@@ -28,7 +28,7 @@ class _CameraScreenState extends State<CameraScreen>{
       if (!mounted) return; //avbryter om användaren lämnar sidan innan kameran hinner starta
       setState(() {}); //detta ändrar UI när kameran är redo
     }).catchError((Object e){
-      print("Kamerafel: $e"); // detta loggar om något går fel
+      debugPrint("Kamerafel: $e"); // detta loggar om något går fel
     });
   }
 
@@ -70,10 +70,10 @@ class _CameraScreenState extends State<CameraScreen>{
                   onTap: () async{
                     try {
                       final image = await controller.takePicture();
-                      print("Bild sparad på: ${image.path}");
+                      debugPrint("Bild sparad på: ${image.path}");
                       // här kan vi skicka bilden till backend
                     } catch (e) {
-                      print (e);
+                      debugPrint ('Fel: $e');
                     }
                   },
                   child: Container(
