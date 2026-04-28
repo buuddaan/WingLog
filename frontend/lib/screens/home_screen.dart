@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-// Inte aktiv
 import 'map_screen.dart';
 import 'Camera_screen.dart';
 import '../main.dart';
 import 'community_screen.dart';
 import 'SoundRecording_screen.dart';
+import 'gallery_screen.dart';
 
 class MyHomePage extends StatefulWidget {
   // Lägg till onLogout här:
@@ -37,7 +37,7 @@ class _MyHomePageState extends State<MyHomePage> {
     const MapScreen(),     // Sidan 1: Din interaktiva karta
     CameraScreen(cameras: cameras), // Sidan 2: Kamera (OBS: Kräver att 'cameras' är definierad)
     const CommunityScreen(), // Sidan 3: Forum
-    const Center(child: Text('Profil')), // Sidan 4: Profil
+    const GalleryScreen(), // Sidan 4: Galleri
     const SoundRecordingScreen(), // Sidan 5: Ljudinspelning
   ];
 
@@ -98,7 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Karta'),
           BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: 'Kamera'),
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+          BottomNavigationBarItem(icon: Icon(Icons.photo_album), label: 'Galleri'),
           BottomNavigationBarItem(icon: Icon(Icons.mic), label: 'Spela in'),
 
         ],
