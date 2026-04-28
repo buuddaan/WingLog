@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
+
 
 
 
@@ -17,7 +17,8 @@ class _MapScreenState extends State<MapScreen> {
   final TextEditingController _searchController = TextEditingController();
 
 GoogleMapController? _mapController;
-LatLng _initialPosition = const LatLng(59.3293, 18.0686);
+final LatLng _initialPosition = const LatLng(59.3293, 18.0686);
+
 
   @override
   Widget build(BuildContext context) {
