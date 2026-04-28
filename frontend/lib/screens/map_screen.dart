@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
+
+
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -12,26 +16,22 @@ class _MapScreenState extends State<MapScreen> {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
 
+GoogleMapController? _mapController;
+LatLng _initialPosition = const LatLng(59.3293, 18.0686);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5DC),
       body: Stack(
         children: [
-          InteractiveViewer(
-            boundaryMargin: const EdgeInsets.all(100.0),
-            minScale: 0.5,
-            maxScale: 4.0,
-            child: Image.network(
-              'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=2000',
-              fit: BoxFit.cover,
-              width: 2000,
-              height: 2000,
-              errorBuilder: (context, error, stackTrace) {
-                return const Center(child: Text('Kunde inte ladda kartbilden.'));
-              },
-            ),
+          GoogleMap(
+            onMapCreated: (controller) => _mapController = controller,
+            initialCameraPosition: CameraPosition(
+              target: _initialPosition,
+              zoom: 12,
           ),
+        ),
 
           //DEN INTERAKTIVA SÖKRUTAN
           Positioned(
