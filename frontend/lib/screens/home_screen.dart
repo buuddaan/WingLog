@@ -3,7 +3,7 @@ import 'map_screen.dart';
 import 'camera_screen.dart';
 import '../main.dart';
 import 'community_screen.dart';
-import 'soundRecording_screen.dart';
+import 'sound_recording_screen.dart';
 import 'gallery_screen.dart';
 
 class MyHomePage extends StatefulWidget {

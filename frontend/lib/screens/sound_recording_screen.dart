@@ -110,10 +110,13 @@ class _ListeningScreenState extends State<ListeningScreen>
       }
     }
 
-    Navigator.pushReplacement(
-      context,
+    if (!mounted) return;
+
+    final navigator = Navigator.of(context);
+
+    navigator.pushReplacement(
       MaterialPageRoute(
-        builder: (context) => RecognitionResultScreen(
+        builder: (_) => RecognitionResultScreen(
           recordedFilePath: path,
           birdResult: birdResult,
         ),
