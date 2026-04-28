@@ -55,7 +55,6 @@ class _ListeningScreenState extends State<ListeningScreen>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   final AudioRecorder _audioRecorder = AudioRecorder();
-  String? _recordedFilePath;
   String _status = 'Startar inspelning...';
 
 
@@ -157,7 +156,6 @@ class _ListeningScreenState extends State<ListeningScreen>
       );
 
       setState(() {
-        _recordedFilePath = filePath;
         _status = 'Lyssnar...';
       });
     } catch (e) {
