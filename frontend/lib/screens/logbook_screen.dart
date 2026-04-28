@@ -40,7 +40,7 @@ class _LogbookScreenState extends State<LogbookScreen> {
                     Icon(
                       Icons.auto_stories,
                       size: 100,
-                      color: const Color(0xFF2D5A27).withOpacity(0.3),
+                      color: const Color(0xFF2D5A27).withValues(alpha: 0.3),
                     ),
                     const SizedBox(height: 16),
                     const Text(

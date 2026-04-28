@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'map_screen.dart';
-import 'Camera_screen.dart';
+import 'camera_screen.dart';
 import '../main.dart';
 import 'community_screen.dart';
-import 'SoundRecording_screen.dart';
+import 'soundRecording_screen.dart';
 import 'gallery_screen.dart';
 
 class MyHomePage extends StatefulWidget {

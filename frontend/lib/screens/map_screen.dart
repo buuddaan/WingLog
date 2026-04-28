@@ -42,7 +42,7 @@ class _MapScreenState extends State<MapScreen> {
               duration: const Duration(milliseconds: 300), // Hastighet på animation, zoomar in lite för att bekräfta att vi nu gör en sök
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.95),
+                color: Colors.white.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8)],
               ),
