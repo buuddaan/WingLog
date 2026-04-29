@@ -1,4 +1,3 @@
-
 package com.winglog.photo.repository;
 
 import com.winglog.photo.model.BirdImage;
@@ -9,10 +8,10 @@ import java.util.UUID;
 
 public interface PhotoRepository extends JpaRepository<BirdImage, UUID> {
 
-    List<BirdImage> findByUSerId(UUID userId);
+List<BirdImage> findByUserId(UUID userId);
 
-    List<BirdImage> findByFolderId(UUID folderId);
+List<BirdImage> findByFolderId(UUID folderId);
 
-    void deleteByIdAndUserId(UUID id, UUID userId);
+void deleteByIdAndUserId(UUID id, UUID userId);
 
 }
