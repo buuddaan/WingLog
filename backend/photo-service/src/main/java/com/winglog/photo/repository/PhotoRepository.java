@@ -10,7 +10,7 @@ public interface PhotoRepository extends JpaRepository<BirdImage, UUID> {
 
 List<BirdImage> findByUserId(UUID userId);
 
-List<BirdImage> findByFolderId(UUID folderId);
+List<BirdImage> findByFolderName(UUID folderId);
 
 void deleteByIdAndUserId(UUID id, UUID userId);
 
