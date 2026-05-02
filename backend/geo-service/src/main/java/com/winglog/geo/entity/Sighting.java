@@ -20,8 +20,7 @@ public class Sighting {
     @Column(name = "species_name", nullable = false)
     private String speciesName;
 
-    @Column(columnDefinition = "geometry(Point,4326)", nullable = false)
-    private Point location; //Hanteras av hibernate-spatial /EF
+    @Column(columnDefinition = "geometry(Point,4326)", nullable = false)    private Point location; //Hanteras av hibernate-spatial /EF
 
     @Column(columnDefinition = "TEXT")
     private String description;
