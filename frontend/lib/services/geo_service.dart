@@ -52,8 +52,7 @@ class GeoService {
       'latitude': latitude,
       'longitude': longitude,
       'speciesName': speciesName,
-      if (description != null) 'description': description,
-    };
+      'description': description,    };
 
     final response = await http.post(
       uri,
