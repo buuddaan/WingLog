@@ -8,7 +8,9 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -50,24 +52,24 @@ public class SightingService {
 
     public SightingResponse getSightingById(UUID id) {
         Sighting sighting = sightingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Sighting not found: " + id)); //Kan bytas mot custom exception senare /EF
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sighting not found: " + id));
         return SightingResponse.fromEntity(sighting);
     }
 
     public void deleteSighting(UUID id, UUID userId) {
         Sighting sighting = sightingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Sighting not found: " + id)); //Kan bytas mot custom exception senare /EF
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sighting not found: " + id));
         if (!sighting.getUserId().equals(userId)) { //Kontrollera att användaren äger observationen /EF
-            throw new RuntimeException("Not authorized to delete this sighting");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to delete this sighting");
         }
         sightingRepository.delete(sighting); //Ta bort observationen från databasen /EF
     }
 
     public SightingResponse updateSighting(UUID id, SightingRequest request, UUID userId) {
         Sighting sighting = sightingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Sighting not found: " + id)); //Kan bytas mot custom exception senare /EF
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sighting not found: " + id));
         if (!sighting.getUserId().equals(userId)) { //Kontrollera att användaren äger observationen /EF
-            throw new RuntimeException("Not authorized to update this sighting");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to update this sighting");
         }
         sighting.setSpeciesName(request.getSpeciesName()); //Uppdatera artnamn /EF
         Point location = geometryFactory.createPoint(new Coordinate(request.getLongitude(), request.getLatitude())); //Bygg ny plats från koordinater /EF
