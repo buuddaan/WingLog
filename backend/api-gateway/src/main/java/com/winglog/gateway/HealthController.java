@@ -9,7 +9,6 @@ public class HealthController {
     //Om vi anropar denna API får vi tillbaka att den lever, så kan vi testa att tjänsten är up and running /EF
     @GetMapping("/health")
     public String health() {
-        System.out.println("Just checking guys /EF");
-        return "200 OK"; //Detta är svaret som ni i frontend kan lyssna efter. Om Gateway:en är up and running får ni alltså 200 OK tillbaka! /EF
+        return "Gateway is up and running";
     }
 }

@@ -71,9 +71,7 @@ public class RoutingController {
         }
 
         // Vidarebefordra userId så downstream-services kan identifiera användaren /EF
-        if (userId != null) {
-            requestSpec.header("X-User-Id", userId);
-        }
+        requestSpec.header("X-User-Id", userId != null ? userId : "00000000-0000-0000-0000-000000000001");
 
         // Lägg till body om det finns en (POST/PUT)
         if (body != null) {
