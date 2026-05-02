@@ -62,7 +62,7 @@ public class SightingController {
 
     @GetMapping
     public ResponseEntity<List<SightingResponse>> getSightings(
-            @RequestParam(required = false) String species) {
+            @RequestParam(name = "species", required = false) String species) {
         if (species != null && !species.isBlank()) {
             return ResponseEntity.ok(sightingService.getSightingsBySpecies(species));
         }
