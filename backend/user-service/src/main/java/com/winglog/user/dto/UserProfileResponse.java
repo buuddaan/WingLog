@@ -1,4 +1,4 @@
-package com.winglog.user.dto.response;
+package com.winglog.user.dto;
 
 import com.winglog.user.model.UserProfile;
 import java.util.UUID;

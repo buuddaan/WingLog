@@ -1,4 +1,4 @@
-package com.winglog.user.dto.request;
+package com.winglog.user.dto;
 
 import jakarta.validation.constraints.Size;
 

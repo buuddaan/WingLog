@@ -1,8 +1,8 @@
 package com.winglog.user.service;
 
-import com.winglog.user.dto.request.CreateProfileRequest;
-import com.winglog.user.dto.request.UpdateProfileRequest;
-import com.winglog.user.dto.response.UserProfileResponse;
+import com.winglog.user.dto.CreateProfileRequest;
+import com.winglog.user.dto.UpdateProfileRequest;
+import com.winglog.user.dto.UserProfileResponse;
 import com.winglog.user.model.UserProfile;
 import com.winglog.user.repository.UserProfileRepository;
 import org.springframework.http.HttpStatus;

@@ -1,8 +1,8 @@
 //Frontend "entre" :D
 package com.winglog.user.controller;
 
-import com.winglog.user.dto.request.UpdateProfileRequest;
-import com.winglog.user.dto.response.UserProfileResponse;
+import com.winglog.user.dto.UpdateProfileRequest;
+import com.winglog.user.dto.UserProfileResponse;
 import com.winglog.user.security.UserIdFilter;
 import com.winglog.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;

@@ -2,8 +2,8 @@
 
 package com.winglog.user.controller;
 
-import com.winglog.user.dto.request.CreateProfileRequest;
-import com.winglog.user.dto.response.UserProfileResponse;
+import com.winglog.user.dto.CreateProfileRequest;
+import com.winglog.user.dto.UserProfileResponse;
 import com.winglog.user.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
