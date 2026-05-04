@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 
 
 
@@ -14,6 +17,27 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   //Variabler för att hantera sökstatus
   bool _isSearching = false;
+  GoogleMapController? _mapController;
+  static const String _mapsApiKey = 'AIzaSyBBRoH_10iOdpYF7_FUuEJLay_DGeFq7y8';
+  bool _isLoading = false;
+  Future<void> _searchPlace(String query) async {
+  setState(() => _isLoading = true);
+  final url = Uri.parse(
+    'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(query)}&key=$_mapsApiKey',
+  );
+  final response = await http.get(url);
+  final data = json.decode(response.body);
+    if (data['status'] == 'OK') {
+
+
+    final loc = data['results'][0]['geometry']['location'];
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(LatLng(loc['lat'], loc['lng']), 13),
+    );
+  }
+  setState(() => _isLoading = false);
+}
+
   final TextEditingController _searchController = TextEditingController();
 
 
@@ -26,7 +50,8 @@ final LatLng _initialPosition = const LatLng(59.3293, 18.0686);
       backgroundColor: const Color(0xFFF5F5DC),
       body: Stack(
         children: [
-          GoogleMap(
+          GoogleMap(onMapCreated: (controller) => _mapController = controller,
+
             
             initialCameraPosition: CameraPosition(
               target: _initialPosition,
@@ -67,7 +92,8 @@ final LatLng _initialPosition = const LatLng(59.3293, 18.0686);
                 ),
                 onSubmitted: (value) {
                   // Här kommer kopplingen API in senare
-                  debugPrint('Söker efter: $value via API...');
+                  _searchPlace(value);
+
                 },
               )
                   : InkWell(
