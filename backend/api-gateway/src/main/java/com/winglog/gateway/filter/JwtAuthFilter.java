@@ -39,34 +39,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Hämta Authorization-headern /EF
         String authHeader = request.getHeader("Authorization");
 
-        // Saknas headern eller börjar den inte med "Bearer " --> dkicka felkod 401
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Saknad eller felaktig Authorization-header");
-            return;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+
+            if (!jwtUtil.validateToken(token)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Ogiltig eller utgången token");
+                return;
+            }
+
+            request.setAttribute("X-User-Email", jwtUtil.readEmail(token));
+            request.setAttribute("X-User-Id", jwtUtil.readUserId(token));
         }
 
-        //Plocka ut själva token-strängen /EF
-        String token = authHeader.substring(7);
-
-        // Validera token
-        if (!jwtUtil.validateToken(token)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Ogiltig eller utgången token");
-            return;
-        }
-
-        // Token giltig, plocka ut email och lägg som attribut för downstream-services /EF
-        String email = jwtUtil.readEmail(token);
-        request.setAttribute("X-User-Email", email);
-
-        String userId = jwtUtil.readUserId(token); // Läser ut userId-claimet ur den validerade JWT-token /EF
-        request.setAttribute("X-User-Id", userId); // Fäster userId på requesten så downstream-services kan identifiera användaren utan att parsa JWT själva (stateless) /EF
-
-        // Släpp igenom till controller
         filterChain.doFilter(request, response);
     }
 }

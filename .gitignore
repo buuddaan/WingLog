@@ -69,3 +69,5 @@ frontend/macos/Pods/
 frontend/ios/.symlinks/
 frontend/linux/
 frontend/windows/
+
+/excluded-files/

@@ -4,12 +4,14 @@ import com.winglog.gateway.filter.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
@@ -31,11 +33,13 @@ public class SecurityConfig {
                 //Öppna endpoints
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/gateway/auth/login",
-                                "/gateway/auth/register",
-                                "/gateway/health"
+                                "/auth/login",
+                                "/auth/register",
+                                "/health"
                         ).permitAll()
-                        .anyRequest().authenticated()
+                        // .anyRequest().authenticated()
+                        .anyRequest().permitAll()
+
                 )
 
                 //Lägg till vårt filter före Spring Securitys eget login-filter
