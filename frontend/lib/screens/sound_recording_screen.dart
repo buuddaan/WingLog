@@ -294,24 +294,25 @@ class _RecognitionResultScreenState extends State<RecognitionResultScreen> {
               ),
 
               const SizedBox(height: 16),
-              if (widget.birdResult != null) ...[
-                Text(
-                  widget.birdResult!['birdName'] ?? 'Okänd',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.birdResult!['scientificName'] ?? '',
-                  style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${((widget.birdResult!['confidence'] as num) * 100).toStringAsFixed(1)}%',
-                  style: const TextStyle(fontSize: 18),
-                  textAlign: TextAlign.center,
-                ),
+              if (widget.birdResult?['suggestions'] != null) ...[
+                ...(widget.birdResult!['suggestions'] as List).map((s) {
+                  final pct = ((s['confidence'] as num) * 100).toStringAsFixed(1);
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    child: ListTile(
+                      leading: const Icon(Icons.flutter_dash, color: Color(0xFF2D5A27)),
+                      title: Text(
+                        s['birdName'] ?? 'Okänd',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        s['scientificName'] ?? '',
+                        style: const TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                      trailing: Text('$pct%', style: const TextStyle(fontSize: 16)),
+                    ),
+                  );
+                }),
               ] else
                 const Text(
                   'Kunde inte identifiera fågeln.',

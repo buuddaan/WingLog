@@ -1,6 +1,7 @@
 package com.winglog.audio.controller;
 
 import com.winglog.audio.model.AudioRecord;
+import com.winglog.audio.model.IdentifyResponse;
 import com.winglog.audio.service.AudioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +27,8 @@ public class AudioController {
     // POST /audio/identify
     // Tar emot en ljudfil och returnerar identifieringsresultatet
     @PostMapping("/identify")
-    public ResponseEntity<AudioRecord> identify(@RequestParam("file") MultipartFile file) throws IOException {
-        AudioRecord result = audioService.identify(file);
+    public ResponseEntity<IdentifyResponse> identify(@RequestParam("file") MultipartFile file) throws IOException {
+        IdentifyResponse result = audioService.identify(file);
         return ResponseEntity.ok(result);
     }
 
