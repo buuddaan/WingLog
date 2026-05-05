@@ -51,6 +51,8 @@ public class GoogleAuthHandler implements AuthenticationSuccessHandler {
         }
 
         String token = jwtUtil.generateToken(email, authUser.get().getId().toString());
-        response.sendRedirect("http://localhost:8080?token=" + token);
+        // response.sendRedirect("http://localhost:8080?token=" + token);
+        response.sendRedirect("http://localhost:3000/?token=" + token);
+
     }
 }
