@@ -1,6 +1,8 @@
 package com.winglog.audio.service;
 
 import com.winglog.audio.model.AudioRecord;
+import com.winglog.audio.model.BirdSuggestion;
+import com.winglog.audio.model.IdentifyResponse;
 import com.winglog.audio.repository.AudioRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -31,7 +33,7 @@ public class AudioService {
         this.restTemplate = restTemplate;
     }
 
-    public AudioRecord identify(MultipartFile file) throws IOException {
+    public IdentifyResponse identify(MultipartFile file) throws IOException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -50,13 +52,25 @@ public class AudioService {
             throw new RuntimeException("BirdNET svarade inte");
         }
 
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> rawSuggestions = (List<Map<String, Object>>) response.get("suggestions");
+        List<BirdSuggestion> suggestions = rawSuggestions.stream()
+                .map(s -> new BirdSuggestion(
+                        (String) s.get("birdName"),
+                        (String) s.get("scientificName"),
+                        ((Number) s.get("confidence")).doubleValue()
+                ))
+                .toList();
+
+        BirdSuggestion top = suggestions.get(0);
         AudioRecord record = new AudioRecord();
         record.setFileName(file.getOriginalFilename());
-        record.setBirdName((String) response.get("birdName"));
-        record.setScientificName((String) response.get("scientificName"));
-        record.setConfidence(((Number) response.get("confidence")).doubleValue());
+        record.setBirdName(top.getBirdName());
+        record.setScientificName(top.getScientificName());
+        record.setConfidence(top.getConfidence());
+        AudioRecord saved = audioRepository.save(record);
 
-        return audioRepository.save(record);
+        return new IdentifyResponse(saved, suggestions);
     }
 
     public List<AudioRecord> getHistory() {
