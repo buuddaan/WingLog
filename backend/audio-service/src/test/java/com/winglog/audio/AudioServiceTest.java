@@ -1,6 +1,7 @@
 package com.winglog.audio;
 
 import com.winglog.audio.model.AudioRecord;
+import com.winglog.audio.model.IdentifyResponse;
 import com.winglog.audio.repository.AudioRepository;
 import com.winglog.audio.service.AudioService;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,9 @@ public class AudioServiceTest {
         when(file.getOriginalFilename()).thenReturn("kungsfagel.wav");
         when(file.getBytes()).thenReturn(new byte[]{1, 2, 3});
         when(restTemplate.postForObject(anyString(), any(), eq(Map.class)))
-                .thenReturn(Map.of("birdName", "Goldcrest", "scientificName", "Regulus regulus", "confidence", 0.88));
+                .thenReturn(Map.of("suggestions", List.of(
+                        Map.of("birdName", "Goldcrest", "scientificName", "Regulus regulus", "confidence", 0.88)
+                )));
 
         AudioRecord saved = new AudioRecord();
         saved.setBirdName("Goldcrest");
@@ -48,12 +51,12 @@ public class AudioServiceTest {
         saved.setFileName("kungsfagel.wav");
         when(audioRepository.save(any(AudioRecord.class))).thenReturn(saved);
 
-        AudioRecord result = audioService.identify(file);
+        IdentifyResponse result = audioService.identify(file);
 
         assertNotNull(result);
-        assertEquals("Goldcrest", result.getBirdName());
-        assertEquals("Regulus regulus", result.getScientificName());
-        assertEquals(0.88, result.getConfidence());
+        assertEquals("Goldcrest", result.getSuggestions().get(0).getBirdName());
+        assertEquals("Regulus regulus", result.getSuggestions().get(0).getScientificName());
+        assertEquals(0.88, result.getSuggestions().get(0).getConfidence());
     }
 
     @Test
@@ -61,15 +64,17 @@ public class AudioServiceTest {
         when(file.getOriginalFilename()).thenReturn("svartstrupig.wav");
         when(file.getBytes()).thenReturn(new byte[]{1, 2, 3});
         when(restTemplate.postForObject(anyString(), any(), eq(Map.class)))
-                .thenReturn(Map.of("birdName", "Black-throated Sunbird", "scientificName", "Aethopyga saturata", "confidence", 0.99));
+                .thenReturn(Map.of("suggestions", List.of(
+                        Map.of("birdName", "Black-throated Sunbird", "scientificName", "Aethopyga saturata", "confidence", 0.99)
+                )));
 
         AudioRecord saved = new AudioRecord();
         saved.setFileName("svartstrupig.wav");
         when(audioRepository.save(any(AudioRecord.class))).thenReturn(saved);
 
-        AudioRecord result = audioService.identify(file);
+        IdentifyResponse result = audioService.identify(file);
 
-        assertEquals("svartstrupig.wav", result.getFileName());
+        assertEquals("svartstrupig.wav", result.getSavedRecord().getFileName());
     }
 
     @Test

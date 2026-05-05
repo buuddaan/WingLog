@@ -2,6 +2,8 @@ package com.winglog.audio;
 
 import com.winglog.audio.controller.AudioController;
 import com.winglog.audio.model.AudioRecord;
+import com.winglog.audio.model.BirdSuggestion;
+import com.winglog.audio.model.IdentifyResponse;
 import com.winglog.audio.service.AudioService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,14 +37,16 @@ public class AudioControllerTest {
         record.setBirdName("Goldcrest");
         record.setScientificName("Regulus regulus");
         record.setConfidence(0.88);
+        List<BirdSuggestion> suggestions = List.of(new BirdSuggestion("Goldcrest", "Regulus regulus", 0.88));
+        IdentifyResponse identifyResponse = new IdentifyResponse(record, suggestions);
 
-        when(audioService.identify(file)).thenReturn(record);
+        when(audioService.identify(file)).thenReturn(identifyResponse);
 
-        ResponseEntity<AudioRecord> response = audioController.identify(file);
+        ResponseEntity<IdentifyResponse> response = audioController.identify(file);
 
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertEquals("Goldcrest", response.getBody().getBirdName());
+        assertEquals("Goldcrest", response.getBody().getSuggestions().get(0).getBirdName());
     }
 
     @Test
