@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 // import 'package:google_sign_in/google_sign_in.dart'; EF TEST
-import 'package:web/web.dart' as web; // EF TEST
+import '../platform_helpers/auth_redirect_stub.dart'
+  if (dart.library.js_interop) '../platform_helpers/auth_redirect_web.dart'
+  if (dart.library.io) '../platform_helpers/auth_redirect_native.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../services/token_service.dart';
@@ -112,7 +114,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   // Test för att se om inlogg funkar mot backend flödet /EF
   void _handleGoogleSignIn() {
-    web.window.location.href = 'http://localhost:8081/oauth2/authorization/google';
+    redirectToGoogleAuth();
   }
 
   @override

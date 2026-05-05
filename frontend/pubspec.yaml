@@ -46,6 +46,8 @@ dependencies:
   image_picker: ^1.2.1
   google_maps_flutter: ^2.9.0
   geolocator: ^14.0.2
+  url_launcher: ^6.3.2
+  camera_macos: ^0.0.9
 dev_dependencies:
   flutter_test:
     sdk: flutter
