@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 
 
 
@@ -20,6 +22,8 @@ class _MapScreenState extends State<MapScreen> {
   GoogleMapController? _mapController;
   static const String _mapsApiKey = 'AIzaSyBBRoH_10iOdpYF7_FUuEJLay_DGeFq7y8';
   bool _isLoading = false;
+  Set<Marker> _markers = {};
+  Set<Polyline> _polylines = {};
   Future<void> _searchPlace(String query) async {
   setState(() => _isLoading = true);
   final url = Uri.parse(
@@ -27,15 +31,52 @@ class _MapScreenState extends State<MapScreen> {
   );
   final response = await http.get(url);
   final data = json.decode(response.body);
-    if (data['status'] == 'OK') {
+         if (data['status'] == 'OK') {
+      final results = data['results'] as List;
 
+      
+      if (results.isEmpty) {
+        return;
+      } else {
 
-    final loc = data['results'][0]['geometry']['location'];
-    _mapController?.animateCamera(
-      CameraUpdate.newLatLngZoom(LatLng(loc['lat'], loc['lng']), 13),
-    );
-  }
+        if (!mounted) return;
+        showModalBottomSheet(
+          context: context,
+          builder: (_) => ListView.builder(
+            itemCount: results.length,
+            itemBuilder: (_, i) => ListTile(
+              leading: const Icon(Icons.location_on, color: Color(0xFF2D5A27)),
+              title: Text(results[i]['formatted_address']),
+              onTap: () {
+                Navigator.pop(context);
+                _goToLocation(results[i]);
+              },
+            ),
+          ),
+        );
+      }
+    }
+
   setState(() => _isLoading = false);
+}
+  void _goToLocation(dynamic result) {
+    final loc = result['geometry']['location'];
+    final pos = LatLng(loc['lat'], loc['lng']);
+    _mapController?.animateCamera(CameraUpdate.newLatLngZoom(pos, 13));
+    setState(() {
+      _markers = {
+        Marker(markerId: const MarkerId('search_result'), position: pos)
+      };
+    });
+  }
+void _drawRoute(LatLng destination) {
+  setState(() {
+    _markers = {
+      Marker(markerId: const MarkerId('destination'), position: destination),
+    };
+  });
+  final url = 'https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}&travelmode=driving';
+  html.window.open(url, '_blank');
 }
 
   final TextEditingController _searchController = TextEditingController();
@@ -50,14 +91,16 @@ final LatLng _initialPosition = const LatLng(59.3293, 18.0686);
       backgroundColor: const Color(0xFFF5F5DC),
       body: Stack(
         children: [
-          GoogleMap(onMapCreated: (controller) => _mapController = controller,
-
-            
+          GoogleMap(
+            onMapCreated: (controller) => _mapController = controller,
+            markers: _markers,
+            polylines: _polylines,
+            onTap: (LatLng pos) => _drawRoute(pos),
             initialCameraPosition: CameraPosition(
               target: _initialPosition,
               zoom: 12,
+            ),
           ),
-        ),
 
           //DEN INTERAKTIVA SÖKRUTAN
           Positioned(
