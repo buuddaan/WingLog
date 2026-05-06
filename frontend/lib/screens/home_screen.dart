@@ -5,6 +5,7 @@ import '../main.dart';
 import 'community_screen.dart';
 import 'sound_recording_screen.dart';
 import 'gallery_screen.dart';
+import 'login_test_screen.dart';
 
 class MyHomePage extends StatefulWidget {
   // Lägg till onLogout här:
@@ -39,6 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
     const CommunityScreen(), // Sidan 3: Forum
     const GalleryScreen(), // Sidan 4: Galleri
     const SoundRecordingScreen(), // Sidan 5: Ljudinspelning
+    const LoginTypographyPreview(), //test login
   ];
 
   @override
@@ -100,6 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
           BottomNavigationBarItem(icon: Icon(Icons.photo_album), label: 'Galleri'),
           BottomNavigationBarItem(icon: Icon(Icons.mic), label: 'Spela in'),
+          BottomNavigationBarItem(icon: Icon(Icons.home_max_rounded), label: 'TestLogin'),
 
         ],
       ),
