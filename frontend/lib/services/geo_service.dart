@@ -32,8 +32,10 @@ class Sighting {
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       description: json['description'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      isPublic: json['isPublic'] as bool,
+      createdAt: json['createdAt'] is String
+          ? DateTime.parse(json['createdAt'] as String)
+          : DateTime.now(),
+      isPublic: (json['public'] ?? json['isPublic']) as bool? ?? true,
     );
   }
 }
@@ -53,22 +55,37 @@ class GeoService {
     };
   }
 
+  // Hämtar alla sparade observationer — visas som pins på kartan vid start
+  static Future<List<Sighting>> getSightings() async {
+    final uri = Uri.parse('$_baseUrl/sightings');
+    final response = await http.get(uri, headers: await _authHeaders());
+    if (response.statusCode != 200) {
+      throw Exception('Get sightings failed: ${response.statusCode}');
+    }
+    final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
+    return data.map((item) => Sighting.fromJson(item as Map<String, dynamic>)).toList();
+  }
+
   // Hämtar alla pins för en specifik fågelart /EF
   static Future<List<Sighting>> searchBySpecies(String speciesName) async {
     final uri = Uri.parse('$_baseUrl/sightings').replace(
       queryParameters: {'species': speciesName},
     );
-
     final response = await http.get(uri, headers: await _authHeaders());
-
     if (response.statusCode != 200) {
       throw Exception('Search failed: ${response.statusCode}');
     }
-
     final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((item) => Sighting.fromJson(item as Map<String, dynamic>))
-        .toList();
+    return data.map((item) => Sighting.fromJson(item as Map<String, dynamic>)).toList();
+  }
+
+  // Tar bort en observation via DELETE /sightings/{id}
+  static Future<void> deleteSighting(String id) async {
+    final uri = Uri.parse('$_baseUrl/sightings/$id');
+    final response = await http.delete(uri, headers: await _authHeaders());
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Delete sighting failed: ${response.statusCode}');
+    }
   }
 
   // Skapar en ny sighting och returnerar den skapade pinnen /EF
