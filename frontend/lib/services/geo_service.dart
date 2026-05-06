@@ -1,25 +1,39 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'token_service.dart'; // För JWT-headern /EF
 
-class SearchResult {
+// Modell som speglar backend SightingResponse /EF
+class Sighting {
+  final String id;
+  final String userId;
   final String speciesName;
   final double latitude;
   final double longitude;
   final String? description;
+  final DateTime createdAt;
+  final bool isPublic;
 
-  SearchResult({
+  Sighting({
+    required this.id,
+    required this.userId,
     required this.speciesName,
     required this.latitude,
     required this.longitude,
     this.description,
+    required this.createdAt,
+    required this.isPublic,
   });
 
-  factory SearchResult.fromJson(Map<String, dynamic> json) {
-    return SearchResult(
+  factory Sighting.fromJson(Map<String, dynamic> json) {
+    return Sighting(
+      id: json['id'] as String,
+      userId: json['userId'] as String,
       speciesName: json['speciesName'] as String,
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       description: json['description'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      isPublic: json['isPublic'] as bool,
     );
   }
 }
@@ -27,9 +41,25 @@ class SearchResult {
 class GeoService {
   static const String _baseUrl = 'http://localhost:8080/gateway';
 
-  static Future<List<SearchResult>> search(String query) async {
-    final uri = Uri.parse('$_baseUrl/search').replace(queryParameters: {'q': query});
-    final response = await http.get(uri);
+  // Bygger headers med JWT-token för autentiserade anrop /EF
+  static Future<Map<String, String>> _authHeaders() async {
+    final token = await TokenService.getToken();
+    if (token == null) {
+      throw Exception('Inte inloggad — ingen token tillgänglig');
+    }
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+  }
+
+  // Hämtar alla pins för en specifik fågelart /EF
+  static Future<List<Sighting>> searchBySpecies(String speciesName) async {
+    final uri = Uri.parse('$_baseUrl/sightings').replace(
+      queryParameters: {'species': speciesName},
+    );
+
+    final response = await http.get(uri, headers: await _authHeaders());
 
     if (response.statusCode != 200) {
       throw Exception('Search failed: ${response.statusCode}');
@@ -37,31 +67,39 @@ class GeoService {
 
     final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
     return data
-        .map((item) => SearchResult.fromJson(item as Map<String, dynamic>))
+        .map((item) => Sighting.fromJson(item as Map<String, dynamic>))
         .toList();
   }
 
-  static Future<void> creategitSighting(
-    double latitude,
-    double longitude,
-    String speciesName,
+  // Skapar en ny sighting och returnerar den skapade pinnen /EF
+  static Future<Sighting> createSighting({
+    required double latitude,
+    required double longitude,
+    required String speciesName,
     String? description,
-  ) async {
+    bool isPublic = true,
+  }) async {
     final uri = Uri.parse('$_baseUrl/sightings');
     final body = <String, dynamic>{
       'latitude': latitude,
       'longitude': longitude,
       'speciesName': speciesName,
-      'description': description,    };
+      'description': description,
+      'isPublic': isPublic,
+    };
 
     final response = await http.post(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: await _authHeaders(),
       body: jsonEncode(body),
     );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('Create sighting failed: ${response.statusCode}');
     }
+
+    return Sighting.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
   }
 }
