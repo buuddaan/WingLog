@@ -20,6 +20,8 @@ public class BirdImage {
     private String imageUrl;
     @Column
     private String folderName;
+    @Column(name = "session_id")
+    private UUID sessionId;
     @Column(name = "taken_at")
     private LocalDateTime date;
     @Column
@@ -31,11 +33,12 @@ public class BirdImage {
 
     }
 
-    public BirdImage(UUID id, UUID userId, String imageUrl, String folderName, LocalDateTime date, Double longitude, Double latitude) {
+    public BirdImage(UUID id, UUID userId, String imageUrl, String folderName, UUID sessionId, LocalDateTime date, Double longitude, Double latitude) {
         this.id = id;
         this.userId = userId;
         this.imageUrl = imageUrl;
         this.folderName = folderName;
+        this.sessionId = sessionId;
         this.date = date;
         this.longitude = longitude;
         this.latitude = latitude;
@@ -59,6 +62,10 @@ public class BirdImage {
 
     public void setFolderName(String folderName) {
         this.folderName = folderName;
+    }
+
+    public UUID getSessionId() {
+        return sessionId;
     }
 
     public LocalDateTime getDate() {

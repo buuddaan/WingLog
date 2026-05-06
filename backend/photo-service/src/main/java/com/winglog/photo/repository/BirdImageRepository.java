@@ -13,5 +13,7 @@ public interface BirdImageRepository extends JpaRepository<BirdImage, UUID> {
 
     List<BirdImage> findByUserIdAndFolderNameIsNull(UUID userId);
 
+    List<BirdImage> findBySessionId(UUID sessionId);
+
 
 }
