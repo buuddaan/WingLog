@@ -26,9 +26,13 @@
 	<string>$(PRODUCT_COPYRIGHT)</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Appen behöver mikrofonen för att spela in fågelljud.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+    <key>NSCameraUsageDescription</key>
+    <string>WingLog behöver kameran för att du ska kunna fota fåglar direkt i appen.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>WingLog behöver mikrofonen för att kunna spela in och identifiera fågelläten.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>WingLog behöver åtkomst till dina bilder för att du ska kunna ladda upp tidigare fågelbilder.</string>
 </dict>
 </plist>

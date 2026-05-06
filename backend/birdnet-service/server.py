@@ -52,16 +52,17 @@ def analyze():
         if not results:
             return jsonify({"birdName": "Unknown", "scientificName": "Unknown", "confidence": 0.0})
 
-        best = max(results, key=lambda x: x['confidence'])
-        parts = best['species_name'].split("_")
-        scientific_name = parts[0] if len(parts) > 0 else "Unknown"
-        common_name = parts[1] if len(parts) > 1 else "Unknown"
+        sorted_results = sorted(results, key=lambda x: x['confidence'], reverse=True)[:3]
 
-        return jsonify({
-            "scientificName": scientific_name,
-            "birdName": common_name,
-            "confidence": float(best['confidence'])
-        })
+        suggestions = []
+        for r in sorted_results:
+            parts = r['species_name'].split("_")
+            suggestions.append({
+                "scientificName": parts[0] if len(parts) > 0 else "Unknown",
+                "birdName": parts[1] if len(parts) > 1 else "Unknown",
+                "confidence": float(r['confidence'])
+            })
+        return jsonify({"suggestions": suggestions})
     finally:
         os.unlink(tmp_path)
 
