@@ -3,6 +3,7 @@ import 'screens/home_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'package:camera/camera.dart';
 import 'services/token_service.dart';
+import 'core/theme/app_theme.dart';
 
 List<CameraDescription> cameras = []; // Denna variabel ropar home_screen.dart på!
 
@@ -62,14 +63,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'WingLog',
       debugShowCheckedModeBanner: false, // Tar bort debug-banderollen
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2D5A27), // Din Skogsgröna
-          primary: const Color(0xFF2D5A27),
-          surface: const Color(0xFFF5F5DC),   // Din Beige
-        ),
-      ),
+        theme: AppTheme.lightTheme,
 
       // 3. LOGIKEN: Om inloggad -> Hem, annars -> Welcome (Login)
       home: _isLoggedIn
