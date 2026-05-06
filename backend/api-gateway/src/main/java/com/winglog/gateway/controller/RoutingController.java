@@ -93,7 +93,7 @@ public class RoutingController {
             return postServiceUrl + strippedPath;
         } else if (strippedPath.startsWith("/forums") || strippedPath.startsWith("/threads")) {
             return forumServiceUrl + strippedPath;
-        } else if (strippedPath.startsWith("/sightings") || strippedPath.startsWith("/species")) {
+        } else if (strippedPath.startsWith("/sightings")) {
             return geoServiceUrl + strippedPath;
         } else if (strippedPath.startsWith("/photos")) {
             return photoServiceUrl + strippedPath;
