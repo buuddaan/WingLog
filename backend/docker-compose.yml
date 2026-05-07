@@ -2,8 +2,6 @@ services:
   birdnet:
     build:
       context: ./birdnet-service
-    ports:
-      - "5000:5000"
 
   audio-service:
     build:
