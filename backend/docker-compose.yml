@@ -1,0 +1,22 @@
+services:
+  birdnet:
+    build:
+      context: ./birdnet-service
+    ports:
+      - "5000:5000"
+
+  audio-service:
+    build:
+      context: .
+      dockerfile: audio-service/Dockerfile
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://aws-1-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require&currentSchema=audio_schema&prepareThreshold=0"
+      SPRING_DATASOURCE_USERNAME: postgres.tabpziwxnfwykijtykyv
+      SPRING_DATASOURCE_PASSWORD: vazKy4-copgaq-qyspyz
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_PROFILES_ACTIVE: docker
+      BIRDNET_URL: http://birdnet:5000
+    depends_on:
+      - birdnet
