@@ -37,7 +37,7 @@ public class SightingController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateSighting(
-            @PathVariable UUID id,
+            @PathVariable("id") UUID id,
             @RequestBody SightingRequest request,
             @RequestHeader("X-User-Id") UUID userId) {
         if (request.getLatitude() == null) {
@@ -54,7 +54,7 @@ public class SightingController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSighting(
-            @PathVariable UUID id,
+            @PathVariable("id") UUID id,
             @RequestHeader("X-User-Id") UUID userId) {
         sightingService.deleteSighting(id, userId);
         return ResponseEntity.noContent().build();
@@ -70,7 +70,7 @@ public class SightingController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SightingResponse> getSightingById(@PathVariable UUID id) {
+    public ResponseEntity<SightingResponse> getSightingById(@PathVariable("id") UUID id) {
         return ResponseEntity.ok(sightingService.getSightingById(id));
     }
 }

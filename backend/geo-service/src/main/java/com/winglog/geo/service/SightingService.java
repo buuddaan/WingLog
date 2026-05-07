@@ -10,6 +10,7 @@ import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -56,13 +57,14 @@ public class SightingService {
         return SightingResponse.fromEntity(sighting);
     }
 
+    @Transactional
     public void deleteSighting(UUID id, UUID userId) {
         Sighting sighting = sightingRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sighting not found: " + id));
         if (!sighting.getUserId().equals(userId)) { //Kontrollera att användaren äger observationen /EF
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to delete this sighting");
         }
-        sightingRepository.delete(sighting); //Ta bort observationen från databasen /EF
+        sightingRepository.deleteByEntityId(id); //Ta bort observationen direkt via JPQL /EF
     }
 
     public SightingResponse updateSighting(UUID id, SightingRequest request, UUID userId) {
