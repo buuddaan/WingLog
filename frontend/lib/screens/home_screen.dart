@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'map_screen.dart';
 import 'camera_screen.dart';
 import '../main.dart';
-import 'community_screen.dart';
 import 'sound_recording_screen.dart';
 import 'gallery_screen.dart';
 import 'login_test_screen.dart';
@@ -36,18 +35,11 @@ class _MyHomePageState extends State<MyHomePage> {
             fontWeight: FontWeight.bold),
       ),
     ),
-    const MapScreen(),
-    // Sidan 1: Din interaktiva karta
-    CameraScreen(cameras: cameras),
-    // Sidan 2: Kamera (OBS: Kräver att 'cameras' är definierad)
-    const CommunityScreen(),
-    // Sidan 3: Forum
-    const GalleryScreen(),
-    // Sidan 4: Galleri
-    const SoundRecordingScreen(),
-    // Sidan 5: Ljudinspelning
-    const LoginTypographyPreview(),
-    //test login
+    const MapScreen(),     // Sidan 1: Din interaktiva karta
+    CameraScreen(cameras: cameras), // Sidan 2: Kamera (OBS: Kräver att 'cameras' är definierad)
+    const GalleryScreen(), // Sidan 4: Galleri
+    const SoundRecordingScreen(), // Sidan 5: Ljudinspelning
+    const LoginTypographyPreview(), //test login
   ];
 
   @override
@@ -104,13 +96,22 @@ class _MyHomePageState extends State<MyHomePage> {
       body: _pages[_selectedIndex],
 
       // 2. BOTTOM NAVIGATION BAR
-      bottomNavigationBar: AppBottomNav(
-        selectedIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          }); //korrigera siffror i appBottomNav
-        },
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) => setState(() => _selectedIndex = index),
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF2D5A27),
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Hem'),
+          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Karta'),
+          BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: 'Kamera'),
+          BottomNavigationBarItem(icon: Icon(Icons.photo_album), label: 'Galleri'),
+          BottomNavigationBarItem(icon: Icon(Icons.mic), label: 'Spela in'),
+          BottomNavigationBarItem(icon: Icon(Icons.home_max_rounded), label: 'TestLogin'),
+
+        ],
       ),
     );
   }
