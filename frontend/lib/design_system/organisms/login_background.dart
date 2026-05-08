@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/theme/app_colors.dart';
 import'package:frontend/core/theme/app_gradients.dart';
+import 'package:frontend/core/theme/app_images.dart';
+import 'package:frontend/core/theme/app_sizes.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
+
 
 
 class LoginBackground extends StatelessWidget {
@@ -10,11 +15,11 @@ class LoginBackground extends StatelessWidget {
     return Container(
       height: double.infinity,
       width: double.infinity,
-      color: Colors.white,
+      color: AppColors.surface,
       child: Align(
         alignment: Alignment.topCenter,
         child: SizedBox(
-          height: 380,
+          height: 390, // ändra på himlens placering
           width: double.infinity,
           child: Stack(
         children: [
@@ -24,9 +29,22 @@ class LoginBackground extends StatelessWidget {
             ),
           ),
           Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.loginLogoTop),
+              child: Image.asset(
+                AppImages.logo,
+                width: AppSizes.loginLogoWidth,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 290),
+
+          Align(
             alignment: Alignment.bottomCenter,
             child: SizedBox(
-              height: 120,
+              height: 220, //ändra på när vita delen börjar
               width: double.infinity,
               child: CustomPaint(
                 painter: _WhiteWavePainter(),
@@ -45,26 +63,26 @@ class _WhiteWavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white
+      ..color = AppColors.surface
       ..style = PaintingStyle.fill;
 
-    final path = Path()
-      ..moveTo(0, size.height * 0.5)
+    final path = Path()  //justera vågens waves
+      ..moveTo(0, size.height * 0.6)
       ..cubicTo(
-        size.width * 0.2,
-        size.height * 0.1,
+        size.width * 0.15,
+        size.height * 0.2,
         size.width * 0.35,
-        size.height * 0.7,
-        size.width * 0.5,
+        size.height * 0.9,
+        size.width * 0.55,
         size.height * 0.5,
       )
       ..cubicTo(
-        size.width * 0.7,
-        size.height * 0.2,
-        size.width * 0.85,
-        size.height * 0.6,
+        size.width * 0.75, //andra kullen
+        size.height * 0.15, //andra kullen
+        size.width * 0.8,  //andra kullen neråt
+        size.height * 0.8,
         size.width,
-        size.height * 0.4,
+        size.height * 0.6, //vågens slut
       )
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)

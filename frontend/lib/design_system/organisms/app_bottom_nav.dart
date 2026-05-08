@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_icons.dart';
 import '../atoms/app_icon.dart';
 
+
 class AppBottomNav extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onTap;
@@ -29,13 +30,13 @@ class AppBottomNav extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildNavItem(
-            icon: AppIcons.soundSearch,
-            label: 'Identifiera ljud',
+            icon: AppIcons.myCollection,
+            label: 'Inloggad',
             index: 0,
           ),
           _buildNavItem(
             icon: AppIcons.imageSearch,
-            label: 'Identifiera bild',
+            label: 'Karta',
             index: 1,
           ),
           _buildNavItem(
@@ -45,8 +46,23 @@ class AppBottomNav extends StatelessWidget {
           ),
           _buildNavItem(
             icon: AppIcons.myCollection,
-            label: 'Min samling',
+            label: 'Gemenskap',
             index: 3,
+          ),
+          _buildNavItem(
+            icon: AppIcons.myCollection,
+            label: 'Galleri',
+            index: 4,
+          ),
+          _buildNavItem(
+            icon: AppIcons.soundSearch,
+            label: 'Spela in ljud',
+            index: 5,
+          ),
+          _buildNavItem(
+            icon: AppIcons.myCollection,
+            label: 'TrueLogin',
+            index: 6,
           ),
         ],
       ),
@@ -67,7 +83,7 @@ class AppBottomNav extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           AppIcon(
-            icon: icon,
+            icon,
             size: 24,
             color: color,
           ),
