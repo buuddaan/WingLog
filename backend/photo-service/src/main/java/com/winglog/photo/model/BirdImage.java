@@ -33,8 +33,7 @@ public class BirdImage {
 
     }
 
-    public BirdImage(UUID id, UUID userId, String imageUrl, String folderName, UUID sessionId, LocalDateTime date, Double longitude, Double latitude) {
-        this.id = id;
+    public BirdImage(UUID userId, String imageUrl, String folderName, UUID sessionId, LocalDateTime date, Double longitude, Double latitude) {
         this.userId = userId;
         this.imageUrl = imageUrl;
         this.folderName = folderName;
