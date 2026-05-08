@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/core/theme/app_colors.dart';
+import 'app_colors.dart';
 
 class AppGradients {
   AppGradients._();
 
   static const LinearGradient loginBackground = LinearGradient(
-    begin: Alignment(0.5, -0.00),
-    end: Alignment(0.5, 1),
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      AppColors.brandPrimary,
+      AppColors.brandSecondary,
+    ],
+  );
+
+  static const LinearGradient googleButton = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
     colors: [
       AppColors.brandPrimary,
       AppColors.brandSecondary,
     ],
   );
 }
-

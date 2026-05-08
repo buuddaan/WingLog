@@ -40,6 +40,7 @@ class SoundRecordingScreen extends StatelessWidget{
                 ),
               ),
             ),
+
          );
 } }
 
