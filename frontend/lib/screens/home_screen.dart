@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'map_screen.dart';
 import 'camera_screen.dart';
 import '../main.dart';
-import 'community_screen.dart';
 import 'sound_recording_screen.dart';
 import 'gallery_screen.dart';
 import 'login_test_screen.dart';
@@ -37,7 +36,6 @@ class _MyHomePageState extends State<MyHomePage> {
     ),
     const MapScreen(),     // Sidan 1: Din interaktiva karta
     CameraScreen(cameras: cameras), // Sidan 2: Kamera (OBS: Kräver att 'cameras' är definierad)
-    const CommunityScreen(), // Sidan 3: Forum
     const GalleryScreen(), // Sidan 4: Galleri
     const SoundRecordingScreen(), // Sidan 5: Ljudinspelning
     const LoginTypographyPreview(), //test login
@@ -99,7 +97,6 @@ class _MyHomePageState extends State<MyHomePage> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Hem'),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Karta'),
           BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: 'Kamera'),
-          BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
           BottomNavigationBarItem(icon: Icon(Icons.photo_album), label: 'Galleri'),
           BottomNavigationBarItem(icon: Icon(Icons.mic), label: 'Spela in'),
           BottomNavigationBarItem(icon: Icon(Icons.home_max_rounded), label: 'TestLogin'),

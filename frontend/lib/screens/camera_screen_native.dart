@@ -12,7 +12,6 @@ class CameraScreen extends StatefulWidget {
 }
 
 class _CameraScreenState extends State<CameraScreen> {
-  // Vi förbereder controllers för båda systemen
   CameraController? mobileController;
   CameraMacOSController? macOsController;
   bool isInitializing = true;
@@ -20,19 +19,27 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.cameras.isEmpty) {
-      debugPrint("Inga kameror hittades.");
-      return;
-    }
-    // Om vi INTE är på Mac (dvs. iOS eller Android), starta vanliga kameran
-    if (!Platform.isMacOS) {
-      if (widget.cameras.isNotEmpty) {
-        mobileController = CameraController(widget.cameras[0], ResolutionPreset.max, enableAudio: false);
-        mobileController!.initialize().then((_) {
-          if (!mounted) return;
-          setState(() { isInitializing = false; });
-        });
+
+    if (Platform.isMacOS) {
+      // För Mac behöver vi inte göra något här. CameraMacOSView sköter
+      // uppstarten och sätter isInitializing till false via sin egen callback.
+    } else {
+      // För iOS och Android
+      if (widget.cameras.isEmpty) {
+        debugPrint("Inga kameror hittades (Körs du i en simulator?).");
+        // Avbryt laddsnurran så skärmen inte fastnar
+        setState(() { isInitializing = false; });
+        return;
       }
+
+      mobileController = CameraController(widget.cameras[0], ResolutionPreset.max, enableAudio: false);
+      mobileController!.initialize().then((_) {
+        if (!mounted) return;
+        setState(() { isInitializing = false; });
+      }).catchError((e) {
+        debugPrint("Kamerafel: $e");
+        setState(() { isInitializing = false; });
+      });
     }
   }
 
@@ -45,7 +52,6 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Välj vilket UI som ska ritas baserat på system
     if (Platform.isMacOS) {
       return _buildMacOsCamera();
     } else {
@@ -61,9 +67,9 @@ class _CameraScreenState extends State<CameraScreen> {
         children: [
           Positioned.fill(
             child: CameraMacOSView(
-              key: GlobalKey(),
               fit: BoxFit.cover,
               cameraMode: CameraMacOSMode.photo,
+              enableAudio: false,
               onCameraInizialized: (CameraMacOSController controller) {
                 setState(() {
                   macOsController = controller;
@@ -81,9 +87,25 @@ class _CameraScreenState extends State<CameraScreen> {
 
   // --- MOBIL UI ---
   Widget _buildMobileCamera() {
-    if (mobileController == null || !mobileController!.value.isInitialized) {
+    // Om kontrollern är null betyder det att vi är på en iOS/Android-simulator utan kamera
+    if (mobileController == null) {
+      return Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+              children: [
+                const Center(
+                    child: Text("Kameran stöds inte i simulatorn.", style: TextStyle(color: Colors.white))
+                ),
+                _buildOverlay(isMac: false), // Ritar kryss-knappen så du kan komma därifrån!
+              ]
+          )
+      );
+    }
+
+    if (!mobileController!.value.isInitialized) {
       return const Scaffold(backgroundColor: Colors.black, body: Center(child: CircularProgressIndicator(color: Colors.white,)));
     }
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -95,7 +117,7 @@ class _CameraScreenState extends State<CameraScreen> {
     );
   }
 
-  // --- DELAT UI FÖR KNAPPARNA (Slipper skriva dubbelt) ---
+  // --- DELAT UI FÖR KNAPPARNA ---
   Widget _buildOverlay({required bool isMac}) {
     return Stack(
       children: [
@@ -112,8 +134,8 @@ class _CameraScreenState extends State<CameraScreen> {
                       final CameraMacOSFile? image = await macOsController?.takePicture();
                       debugPrint("Mac-bild tagen! Bytes: ${image?.bytes?.length}");
                     } else {
-                      final XFile image = await mobileController!.takePicture();
-                      debugPrint("Mobil-bild tagen: ${image.path}");
+                      final XFile? image = await mobileController?.takePicture();
+                      debugPrint("Mobil-bild tagen: ${image?.path}");
                     }
                   } catch (e) {
                     debugPrint('Fel: $e');
