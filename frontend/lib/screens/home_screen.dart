@@ -6,6 +6,7 @@ import 'community_screen.dart';
 import 'sound_recording_screen.dart';
 import 'gallery_screen.dart';
 import 'login_test_screen.dart';
+import '../design_system/organisms/app_bottom_nav.dart';
 
 class MyHomePage extends StatefulWidget {
   // Lägg till onLogout här:
@@ -24,43 +25,57 @@ class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
 
 
-
-
   late final List<Widget> _pages = <Widget>[
     // SIDAN 0: Byt ut WelcomeScreen mot en enkel inloggad vy
     const Center(
       child: Text(
         'Välkommen till WingLog!\n\nDu är nu inloggad.',
         textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 20, color: Color(0xFF2D5A27), fontWeight: FontWeight.bold),
+        style: TextStyle(fontSize: 20,
+            color: Color(0xFF2D5A27),
+            fontWeight: FontWeight.bold),
       ),
     ),
-    const MapScreen(),     // Sidan 1: Din interaktiva karta
-    CameraScreen(cameras: cameras), // Sidan 2: Kamera (OBS: Kräver att 'cameras' är definierad)
-    const CommunityScreen(), // Sidan 3: Forum
-    const GalleryScreen(), // Sidan 4: Galleri
-    const SoundRecordingScreen(), // Sidan 5: Ljudinspelning
-    const LoginTypographyPreview(), //test login
+    const MapScreen(),
+    // Sidan 1: Din interaktiva karta
+    CameraScreen(cameras: cameras),
+    // Sidan 2: Kamera (OBS: Kräver att 'cameras' är definierad)
+    const CommunityScreen(),
+    // Sidan 3: Forum
+    const GalleryScreen(),
+    // Sidan 4: Galleri
+    const SoundRecordingScreen(),
+    // Sidan 5: Ljudinspelning
+    const LoginTypographyPreview(),
+    //test login
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(widget.title),
+        backgroundColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+        title: null,
         centerTitle: true,
+
       ),
 
       // 1. DRAWER (MENY)
       drawer: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.9,
+        width: MediaQuery
+            .of(context)
+            .size
+            .width * 0.9,
         child: Drawer(
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
               const DrawerHeader(
                 decoration: BoxDecoration(color: Color(0xFF2D5A27)),
-                child: Text('WingLog Meny', style: TextStyle(color: Colors.white, fontSize: 24)),
+                child: Text('WingLog Meny',
+                    style: TextStyle(color: Colors.white, fontSize: 24)),
               ),
               ListTile(
                 leading: const Icon(Icons.settings),
@@ -71,7 +86,8 @@ class _MyHomePageState extends State<MyHomePage> {
               const Divider(), // En liten visuell avdelare
               ListTile(
                 leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text('Logga ut', style: TextStyle(color: Colors.red)),
+                title: const Text(
+                    'Logga ut', style: TextStyle(color: Colors.red)),
                 onTap: () {
                   // Stäng menyn först
                   Navigator.pop(context);
@@ -88,23 +104,13 @@ class _MyHomePageState extends State<MyHomePage> {
       body: _pages[_selectedIndex],
 
       // 2. BOTTOM NAVIGATION BAR
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF2D5A27),
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Hem'),
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Karta'),
-          BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: 'Kamera'),
-          BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
-          BottomNavigationBarItem(icon: Icon(Icons.photo_album), label: 'Galleri'),
-          BottomNavigationBarItem(icon: Icon(Icons.mic), label: 'Spela in'),
-          BottomNavigationBarItem(icon: Icon(Icons.home_max_rounded), label: 'TestLogin'),
-
-        ],
+      bottomNavigationBar: AppBottomNav(
+        selectedIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          }); //korrigera siffror i appBottomNav
+        },
       ),
     );
   }
