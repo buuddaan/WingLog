@@ -28,16 +28,15 @@ public class PhotoService {
 
     /**
      * Laddar upp bild till Cloudinary, sparar bildinformation i databasen.
-     * @param request som innehåller bildfilen, datum och koordinater
+     * @param request som innehåller bildfilen, session id datum och koordinater
      * @param userId användarens id
-     * @param sessionId sessionens id
      * @return ImageResponse innehållande bildens information
      * @throws IOException om inte bilden kan läsas in
      */
-    public ImageResponse uploadImage(UploadImageRequest request, UUID userId, UUID sessionId) throws IOException {
+    public ImageResponse uploadImage(UploadImageRequest request, UUID userId) throws IOException {
         String imageUrl = storageService.uploadImage(request.getImage());
 
-        BirdImage birdImage = new BirdImage(userId,imageUrl, null, sessionId, request.getDate(), request.getLongitude(),request.getLatitude());
+        BirdImage birdImage = new BirdImage(userId,imageUrl, null, request.getSessionId(), request.getDate(), request.getLongitude(),request.getLatitude());
         birdImageRepository.save(birdImage);
 
         return new ImageResponse(birdImage.getId(), birdImage.getImageUrl(), birdImage.getFolderName(), birdImage.getSessionId(), birdImage.getDate(), birdImage.getLongitude(), birdImage.getLatitude());
