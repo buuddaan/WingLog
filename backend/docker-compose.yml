@@ -9,11 +9,9 @@ services:
       dockerfile: audio-service/Dockerfile
     ports:
       - "8087:8087"
+    env_file:
+      - .env
     environment:
-      # ROTERAS!!
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://aws-1-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require&currentSchema=audio_schema&prepareThreshold=0"
-      SPRING_DATASOURCE_USERNAME: postgres.tabpziwxnfwykijtykyv
-      SPRING_DATASOURCE_PASSWORD: vazKy4-copgaq-qyspyz
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_PROFILES_ACTIVE: docker
       BIRDNET_URL: http://birdnet:5000
@@ -47,3 +45,20 @@ services:
       SPRING_DATASOURCE_PASSWORD: vazKy4-copgaq-qyspyz
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_PROFILES_ACTIVE: docker
+
+  # ROTERAS OCH LÄGGS I .ENV SEN!!
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://aws-1-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0"
+      SPRING_DATASOURCE_USERNAME: postgres.tabpziwxnfwykijtykyv
+      SPRING_DATASOURCE_PASSWORD: vazKy4-copgaq-qyspyz
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: ${JWT_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}

@@ -30,8 +30,13 @@ class _MapScreenState extends State<MapScreen> {
   // Pins från sparade fågelobservationer (laddas från backend vid start)
   Set<Marker> _sightingMarkers = {};
 
+  // Pins för aktiv artsökning (null = inget filter)
+  Set<Marker>? _filteredSightingMarkers;
+  String? _activeSpeciesFilter;
+
   // Styr om användaren är i "placera pin"-läge (aktiveras via +-knappen)
   bool _placingPin = false;
+  bool _canPlace = false;
 
   @override
   void initState() {
@@ -94,8 +99,8 @@ class _MapScreenState extends State<MapScreen> {
   // Gör inget om "placera pin"-läget inte är aktivt.
   // Om läget är aktivt: stänger läget, öppnar dialog för att fylla i art och beskrivning.
   Future<void> _onMapTap(LatLng pos) async {
-    if (!_placingPin) return;
-    setState(() => _placingPin = false);
+    if (!_placingPin || !_canPlace) return;
+    setState(() { _placingPin = false; _canPlace = false; });
 
     final speciesController = TextEditingController();
     final descController = TextEditingController();
@@ -150,33 +155,42 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  // Söker efter en plats via Google Geocoding API och visar en lista med träffar
-  Future<void> _searchPlace(String query) async {
+  // Söker både fågelarter (backend) och platser (Geocoding API) parallellt
+  Future<void> _search(String query) async {
     setState(() => _isLoading = true);
-    final url = Uri.parse(
-      'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(query)}&key=$_mapsApiKey',
-    );
-    final response = await http.get(url);
-    final data = json.decode(response.body);
 
-    if (data['status'] == 'OK') {
-      final results = data['results'] as List;
-      if (results.isEmpty) {
-        setState(() => _isLoading = false);
-        return;
-      }
-      if (!mounted) return;
-      // Visar sökresultaten i en lista längst ned på skärmen
+    final speciesFuture = GeoService.searchBySpecies(query).catchError((_) => <Sighting>[]);
+    final geoFuture = _geocode(query);
+
+    final sightings = await speciesFuture;
+    final places = await geoFuture;
+
+    if (!mounted) return;
+
+    if (sightings.isNotEmpty) {
+      setState(() {
+        _activeSpeciesFilter = query;
+        _filteredSightingMarkers = sightings.map((s) => Marker(
+          markerId: MarkerId('filtered_${s.id}'),
+          position: LatLng(s.latitude, s.longitude),
+          infoWindow: InfoWindow(title: s.speciesName, snippet: s.description),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+          onTap: () => _showSightingOptions(s),
+        )).toSet();
+      });
+    }
+
+    if (places.isNotEmpty) {
       showModalBottomSheet(
         context: context,
         builder: (_) => ListView.builder(
-          itemCount: results.length,
+          itemCount: places.length,
           itemBuilder: (_, i) => ListTile(
             leading: const Icon(Icons.location_on, color: Color(0xFF2D5A27)),
-            title: Text(results[i]['formatted_address']),
+            title: Text(places[i]['formatted_address']),
             onTap: () {
               Navigator.pop(context);
-              _goToLocation(results[i]);
+              _goToLocation(places[i]);
             },
           ),
         ),
@@ -184,6 +198,16 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     setState(() => _isLoading = false);
+  }
+
+  Future<List<dynamic>> _geocode(String query) async {
+    final url = Uri.parse(
+      'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(query)}&key=$_mapsApiKey',
+    );
+    final response = await http.get(url);
+    final data = json.decode(response.body);
+    if (data['status'] == 'OK') return data['results'] as List;
+    return [];
   }
 
   // Flyttar kameran till vald plats och sätter en röd sökpin där
@@ -213,14 +237,32 @@ class _MapScreenState extends State<MapScreen> {
           // Själva Google Maps-kartan
           GoogleMap(
             onMapCreated: (controller) => _mapController = controller,
-            // Kombinerar sökpins (röda) och observationspins (gröna)
-            markers: {..._markers, ..._sightingMarkers},
+            markers: {..._markers, ...(_filteredSightingMarkers ?? _sightingMarkers)},
             onTap: _onMapTap,
             initialCameraPosition: CameraPosition(
               target: _initialPosition,
               zoom: 12,
             ),
           ),
+
+          // Filterchip som visas när artsökning är aktiv
+          if (_activeSpeciesFilter != null)
+            Positioned(
+              top: 80,
+              left: 20,
+              child: Chip(
+                backgroundColor: const Color(0xFF2D5A27),
+                label: Text(
+                  _activeSpeciesFilter!,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                deleteIconColor: Colors.white,
+                onDeleted: () => setState(() {
+                  _activeSpeciesFilter = null;
+                  _filteredSightingMarkers = null;
+                }),
+              ),
+            ),
 
           // Banner som visas längst ned när "placera pin"-läget är aktivt
           if (_placingPin)
@@ -241,7 +283,7 @@ class _MapScreenState extends State<MapScreen> {
                         style: TextStyle(color: Colors.white)),
                     // Avbryt-knapp som stänger "placera pin"-läget
                     GestureDetector(
-                      onTap: () => setState(() => _placingPin = false),
+                      onTap: () => setState(() { _placingPin = false; _canPlace = false; }),
                       child: const Icon(Icons.close, color: Colors.white),
                     ),
                   ],
@@ -294,7 +336,7 @@ class _MapScreenState extends State<MapScreen> {
                                 },
                               ),
                       ),
-                      onSubmitted: _searchPlace,
+                      onSubmitted: _search,
                     )
                   : InkWell(
                       onTap: () => setState(() => _isSearching = true),
@@ -321,7 +363,12 @@ class _MapScreenState extends State<MapScreen> {
         children: [
           FloatingActionButton(
             heroTag: 'add_observation',
-            onPressed: () => setState(() => _placingPin = true),
+            onPressed: () {
+              setState(() { _placingPin = true; _canPlace = false; });
+              Future.delayed(const Duration(milliseconds: 400), () {
+                if (mounted) setState(() => _canPlace = true);
+              });
+            },
             backgroundColor: const Color(0xFF2D5A27),
             child: const Icon(Icons.add, color: Colors.white),
           ),
