@@ -31,6 +31,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        // Rensa eventuella förinställda identitetsattribut innan validering
+        // Skyddar mot att kod tidigare i kedjan satt attributen och därmed spoofar identitet /EF
+        request.removeAttribute("X-User-Email");
+        request.removeAttribute("X-User-Id");
+
         String path = request.getRequestURI();
 
         // Släpp igenom publika endpoints utan JWT-kontroll /EF
