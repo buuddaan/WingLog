@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_radius.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_gradients.dart';
+import 'package:frontend/core/theme/app_sizes.dart';
 
 enum AppButtonVariant {
   primaryLogin,
@@ -35,7 +36,7 @@ class AppButton extends StatelessWidget {
     return SizedBox(
       width: isFullWidth ? double.infinity : null,
       child: Container(
-        height: 55,
+        height: AppSizes.buttonHeightMd,
         decoration: ShapeDecoration(
           color: isGoogle ? null : AppColors.softUi,
           gradient: isGoogle ? AppGradients.googleButton : null,

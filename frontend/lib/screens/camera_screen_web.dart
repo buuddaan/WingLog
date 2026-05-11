@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:frontend/design_system/atoms/camera_shutter_button.dart';
 
 class CameraScreen extends StatefulWidget {
   //variabel som lagrar alla olika kareror (Fram, bak, vid)
   final List<CameraDescription> cameras;
-  const CameraScreen({super.key, required this.cameras});
+
+  const CameraScreen({
+    super.key,
+    required this.cameras,
+  });
 
   @override
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen>{
+class _CameraScreenState extends State<CameraScreen> {
   late CameraController controller;
+  bool isCameraReady = false; // om kmaeran är färdigstartad eller ej
+  bool isTakingPicture = false; //om bild hållelr på att tas just nu
 
   @override
   void initState(){
@@ -30,7 +37,9 @@ class _CameraScreenState extends State<CameraScreen>{
     //Startar kameran på riktigt (hårdvaran går igång)
     controller.initialize().then((_){
       if (!mounted) return; //avbryter om användaren lämnar sidan innan kameran hinner starta
-      setState(() {}); //detta ändrar UI när kameran är redo
+      setState(() {
+        isCameraReady = true;
+      }); //detta ändrar UI när kameran är redo
     }).catchError((Object e){
       debugPrint("Kamerafel: $e"); // detta loggar om något går fel
     });
@@ -38,15 +47,45 @@ class _CameraScreenState extends State<CameraScreen>{
 
   @override
   void dispose(){
-    controller.dispose(); //stänger ner kamera när man lämnar sidan
+    if (isCameraReady) { //
+      controller.dispose();
+    }  //stänger ner kamera när man lämnar sidan
     super.dispose();
+  }
+
+  Future<void> _takePicture() async { // ta inte bild om kameran ej är redo/bild redan håller på att tas
+    // förklara
+    if (!isCameraReady || isTakingPicture) return;
+
+    setState(() {
+      isTakingPicture = true;
+    });
+
+    try {
+      final image = await controller.takePicture(); //här tas bilden
+      debugPrint('Bild sparad på: ${image
+          .path}'); // här kan vi skicka bilden till backend senare
+    } catch (e) {
+      debugPrint('$e');
+    } finally {
+      if (!mounted) return;
+
+      setState(() {
+        isTakingPicture = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context){
     //en laddningsruta visas medans kameran laddar
-    if (!controller.value.isInitialized){
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (!isCameraReady){
+      return const Scaffold(
+          backgroundColor: Colors.black,
+          body: Center(
+              child: CircularProgressIndicator(color: Colors.white),
+          ),
+      );
     }
 
     return Scaffold(
@@ -54,7 +93,9 @@ class _CameraScreenState extends State<CameraScreen>{
       body: Stack(
         children: [
           // första lagret (kamera livefeed)
-          Positioned.fill(child: CameraPreview(controller),),
+          Positioned.fill(
+            child: CameraPreview(controller),
+          ),
 
           // andra lagret: knappar ovanpå kamera livefeed
           Positioned(
@@ -65,51 +106,39 @@ class _CameraScreenState extends State<CameraScreen>{
               children: [
                 const Text(
                   "Tryck för att identifiera fågel",
-                  style: TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 10)]),
+                  style: TextStyle(
+                    color: Colors.white,
+                    shadows: [Shadow(blurRadius: 10)],
+                  ),
                 ),
+
                 const SizedBox(height: 20),
 
                 // Ta bildknappen
-                GestureDetector(
-                  onTap: () async{
-                    try {
-                      final image = await controller.takePicture();
-                      debugPrint("Bild sparad på: ${image.path}");
-                      // här kan vi skicka bilden till backend
-                    } catch (e) {
-                      debugPrint ('Fel: $e');
-                    }
-                  },
-                  child: Container(
-                    height: 85,
-                    width: 85,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 5),
-                    ),
-                    child: Container(
-                      margin: const EdgeInsets.all(5),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
+                CameraShutterButton( //vår kära kameraknapp atom <3
+                onPressed: _takePicture,
+                isEnabled: !isTakingPicture,
+                outerColor: Colors.transparent,
+                innerColor: Colors.white,
+                borderColor: Colors.white,
+              ),
+             ],
+           ),
+        ),
+              Positioned(
+              top: 50,
+              right: 25,
+              child: IconButton(
+                icon: const Icon(
+                Icons.close,
+                color: Colors.white,
+                size: 35,
                 ),
-              ],
-            ),
-          ),
-          // det tredje lagret: knapp för att kunna kryssa ut
-          Positioned(
-            top: 50,
-            right: 25,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white, size: 35),
               onPressed: () => Navigator.pop(context),
-            ),
+              ),
+             ),
+           ],
           ),
-        ],
-      ),
-    );
-  }
+        );
+    }
 }
