@@ -3,7 +3,7 @@ import 'package:camera/camera.dart';
 import 'package:frontend/design_system/atoms/camera_shutter_button.dart';
 
 class CameraScreen extends StatefulWidget {
-  //variabel som lagrar alla olika kareror (Fram, bak, vid)
+  //variabel som lagrar alla olika kameror (Fram, bak, vid)
   final List<CameraDescription> cameras;
 
   const CameraScreen({
@@ -17,8 +17,8 @@ class CameraScreen extends StatefulWidget {
 
 class _CameraScreenState extends State<CameraScreen> {
   late CameraController controller;
-  bool isCameraReady = false; // om kmaeran är färdigstartad eller ej
-  bool isTakingPicture = false; //om bild hållelr på att tas just nu
+  bool isCameraReady = false; // om kameran är färdigstartad eller ej
+  bool isTakingPicture = false; //om bild håller på att tas just nu
 
   @override
   void initState(){
@@ -68,7 +68,11 @@ class _CameraScreenState extends State<CameraScreen> {
     } catch (e) {
       debugPrint('$e');
     } finally {
-      if (!mounted) return;
+      if (!mounted) { //korrigerade varningen return i i finally
+        setState(() {
+          isTakingPicture = false;
+        });
+      }
 
       setState(() {
         isTakingPicture = false;
