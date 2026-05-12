@@ -19,4 +19,5 @@ public interface BirdImageRepository extends JpaRepository<BirdImage, UUID> {
 
     void deleteBySessionIdAndUserId(UUID sessionId, UUID userId);
 
+    void deleteByIdAndUserId(UUID imageId, UUID userId);
 }

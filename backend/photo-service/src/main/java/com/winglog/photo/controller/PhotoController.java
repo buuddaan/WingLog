@@ -15,15 +15,13 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static com.cloudinary.AccessControlRule.AccessType.token;
-
 @RestController
 @RequestMapping("/photos")
 public class PhotoController {
 
     private PhotoService photoService;
 
-    public PhotoController(PhotoService photoService){
+    public PhotoController(PhotoService photoService) {
         this.photoService = photoService;
     }
 
@@ -32,20 +30,19 @@ public class PhotoController {
             HttpServletRequest request,
             @RequestParam MultipartFile file,
             @RequestParam UUID sessionId,
-            @RequestParam LocalDateTime date,
-            @RequestParam Double longitude,
-            @RequestParam Double latitude) throws IOException{
+            @RequestParam LocalDateTime date) throws IOException {
         UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
-        UploadImageRequest uploadRequest = new UploadImageRequest(file, sessionId, date, longitude, latitude);
+        UploadImageRequest uploadRequest = new UploadImageRequest(file, sessionId, date);
         return ResponseEntity.ok(photoService.uploadImage(uploadRequest, userId));
     }
 
     @PostMapping("/identify")
     public ResponseEntity<IdentifyResponse> identifyImage(
             @RequestParam MultipartFile file
-    ) throws  IOException{
+    ) throws IOException {
         return ResponseEntity.ok(photoService.identifyImage(file));
     }
+
     @PutMapping("/save-to-folder")
     public ResponseEntity<Void> saveToFolder(
             HttpServletRequest request,
@@ -66,15 +63,23 @@ public class PhotoController {
         return ResponseEntity.ok().build();
 
     }
+
     @DeleteMapping("/delete-session")
     public ResponseEntity<Void> deleteSession(
             HttpServletRequest request,
-            @RequestParam UUID sessionId){
+            @RequestParam UUID sessionId) {
 
-       UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
-       photoService.deleteSession(sessionId,userId);
-       return ResponseEntity.noContent().build();
+        UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
+        photoService.deleteSession(sessionId, userId);
+        return ResponseEntity.noContent().build();
 
+    }
+
+    @DeleteMapping("/delete-image")
+    public ResponseEntity<Void> deleteImage(HttpServletRequest request, @RequestParam UUID imageId) {
+        UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
+        photoService.deleteImage(imageId, userId);
+        return ResponseEntity.noContent().build();
     }
 
 }

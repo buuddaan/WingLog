@@ -24,23 +24,17 @@ public class BirdImage {
     private UUID sessionId;
     @Column(name = "taken_at")
     private LocalDateTime date;
-    @Column
-    private Double longitude;
-    @Column
-    private Double latitude;
 
     public BirdImage() {
 
     }
 
-    public BirdImage(UUID userId, String imageUrl, String folderName, UUID sessionId, LocalDateTime date, Double longitude, Double latitude) {
+    public BirdImage(UUID userId, String imageUrl, String folderName, UUID sessionId, LocalDateTime date) {
         this.userId = userId;
         this.imageUrl = imageUrl;
         this.folderName = folderName;
         this.sessionId = sessionId;
         this.date = date;
-        this.longitude = longitude;
-        this.latitude = latitude;
     }
 
     public UUID getId() {
@@ -70,14 +64,5 @@ public class BirdImage {
     public LocalDateTime getDate() {
         return date;
     }
-
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public Double getLatitude() {
-        return latitude;
-    }
-
 
 }
