@@ -9,18 +9,15 @@ public class UploadImageRequest {
     private final MultipartFile image;
     private final UUID sessionId;
     private final LocalDateTime date;
-    private final Double longitude;
-    private final Double latitude;
 
-    public UploadImageRequest(MultipartFile image, UUID sessionId, LocalDateTime date, Double longitude, Double latitude){
+    public UploadImageRequest(MultipartFile image, UUID sessionId, LocalDateTime date) {
         this.image = image;
         this.sessionId = sessionId;
         this.date = date;
-        this.longitude = longitude;
-        this.latitude = latitude;
+
     }
 
-    public MultipartFile getImage(){
+    public MultipartFile getImage() {
         return image;
     }
 
@@ -32,11 +29,4 @@ public class UploadImageRequest {
         return date;
     }
 
-    public Double getLongitude(){
-        return longitude;
-    }
-
-    public Double getLatitude(){
-        return latitude;
-    }
 }

@@ -45,7 +45,7 @@ public class VisionService {
                 if (res.hasError()) {
                     throw new RuntimeException("Fågeln kunde inte identifieras, försök med en annan bild");
                 }
-                
+
                 WebDetection webDetection = res.getWebDetection();
 
                 for (WebDetection.WebEntity entity : webDetection.getWebEntitiesList()) {
