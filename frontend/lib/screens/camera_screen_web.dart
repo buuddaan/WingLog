@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:frontend/design_system/atoms/camera_shutter_button.dart';
+import 'package:frontend/design_system/molecules/camera_bottom_controls.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
 
 class CameraScreen extends StatefulWidget {
   //variabel som lagrar alla olika kameror (Fram, bak, vid)
@@ -18,7 +19,8 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreenState extends State<CameraScreen> {
   late CameraController controller;
   bool isCameraReady = false; // om kameran är färdigstartad eller ej
-  bool isTakingPicture = false; //om bild håller på att tas just nu
+  bool isTakingPicture = false;//om bild håller på att tas just nu
+  bool isFlashOn = false;
 
   @override
   void initState(){
@@ -68,16 +70,22 @@ class _CameraScreenState extends State<CameraScreen> {
     } catch (e) {
       debugPrint('$e');
     } finally {
-      if (!mounted) { //korrigerade varningen return i i finally
+      if (mounted) { //korrigerade varningen return i i finally
         setState(() {
           isTakingPicture = false;
         });
       }
-
-      setState(() {
-        isTakingPicture = false;
-      });
     }
+  }
+
+  void _toggleFlash () {
+    setState(() {
+      isFlashOn = !isFlashOn;
+    });
+  }
+
+  void _retakePicture() {
+    debugPrint('Ta om bild');
   }
 
   @override
@@ -94,18 +102,31 @@ class _CameraScreenState extends State<CameraScreen> {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
+      body: SafeArea(
+        child: Stack(
         children: [
-          // första lagret (kamera livefeed)
+          // första lagret (kamera live feed)
           Positioned.fill(
             child: CameraPreview(controller),
           ),
 
-          // andra lagret: knappar ovanpå kamera livefeed
+          // andra lagret: knappar ovanpå kamera live feed
           Positioned(
-            bottom: 40,
+            top: 16,
+            right: 16,
+            child: IconButton(
+              icon: const Icon(
+                Icons.close,
+                color: Colors.white,
+                size: 32,
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+           Positioned(
             left: 0,
             right: 0,
+            bottom: 40,  //position för camera controls
             child: Column(
               children: [
                 const Text(
@@ -116,33 +137,22 @@ class _CameraScreenState extends State<CameraScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.md),
 
                 // Ta bildknappen
-                CameraShutterButton( //vår kära kameraknapp atom <3
-                onPressed: _takePicture,
-                isEnabled: !isTakingPicture,
-                outerColor: Colors.transparent,
-                innerColor: Colors.white,
-                borderColor: Colors.white,
-              ),
-             ],
-           ),
-        ),
-              Positioned(
-              top: 50,
-              right: 25,
-              child: IconButton(
-                icon: const Icon(
-                Icons.close,
-                color: Colors.white,
-                size: 35,
+                CameraBottomControls(
+                  isLeftActive: isFlashOn,
+                  onGalleryPressed: _toggleFlash,
+                  onShutterPressed: _takePicture,
+                  onSwitchCameraPressed: _retakePicture,
+                  isCaptureEnabled: !isTakingPicture,
                 ),
-              onPressed: () => Navigator.pop(context),
-              ),
-             ),
-           ],
+              ],
+           ),
           ),
-        );
-    }
+         ],
+        ),
+      ),
+    );
+  }
 }

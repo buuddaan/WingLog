@@ -11,7 +11,7 @@ class MyHomePage extends StatefulWidget {
   // Lägg till onLogout här:
   final VoidCallback onLogout;
 
-  // Uppdatera konstruktorn för att kräva den:
+  // Uppdatera constructor för att kräva den:
   const MyHomePage({super.key, required this.title, required this.onLogout});
 
   final String title;
@@ -96,22 +96,14 @@ class _MyHomePageState extends State<MyHomePage> {
       body: _pages[_selectedIndex],
 
       // 2. BOTTOM NAVIGATION BAR
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF2D5A27),
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Hem'),
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Karta'),
-          BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: 'Kamera'),
-          BottomNavigationBarItem(icon: Icon(Icons.photo_album), label: 'Galleri'),
-          BottomNavigationBarItem(icon: Icon(Icons.mic), label: 'Spela in'),
-          BottomNavigationBarItem(icon: Icon(Icons.home_max_rounded), label: 'TestLogin'),
-
-        ],
+      // 2. BOTTOM NAVIGATION BAR
+      bottomNavigationBar: AppBottomNav(
+        selectedIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          }); //korrigera siffror i appBottomNav
+        },
       ),
     );
   }
