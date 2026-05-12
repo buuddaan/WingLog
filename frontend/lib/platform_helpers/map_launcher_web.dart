@@ -1,7 +1,9 @@
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+
+import 'package:web/web.dart' as web;
 
 void openGoogleMapsNavigation(double lat, double lng) {
-  final url = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving';
-  html.window.open(url, '_blank');
+  final url = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
+
+  // Vi använder nu web.window istället för html.window
+  web.window.open(url, '_blank');
 }
