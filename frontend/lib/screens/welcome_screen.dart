@@ -215,7 +215,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   },
                   icon: const Icon(Icons.fast_forward, color: Colors.grey),
                   label: const Text(
-                    'TILLFÄLLIGT: Skippa inloggning',
+                    'TILLFÄLLIGT: Skippa inloggning', //låt vara kvar
                     style: TextStyle(color: Colors.red),
                   ),
                 ),
