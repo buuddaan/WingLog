@@ -1,7 +1,12 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:frontend/design_system/molecules/camera_bottom_controls.dart';
-import 'package:frontend/core/theme/app_spacing.dart';
+// import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/design_system/molecules/camera_flow_bottom_bar.dart';
+
 
 class CameraScreen extends StatefulWidget {
   //variabel som lagrar alla olika kameror (Fram, bak, vid)
@@ -21,6 +26,8 @@ class _CameraScreenState extends State<CameraScreen> {
   bool isCameraReady = false; // om kameran är färdigstartad eller ej
   bool isTakingPicture = false;//om bild håller på att tas just nu
   bool isFlashOn = false;
+ 
+  XFile? capturedImage; //för att camera bottom nav med ta bort, identifiera etc ska dyka up
 
   @override
   void initState(){
@@ -65,8 +72,14 @@ class _CameraScreenState extends State<CameraScreen> {
 
     try {
       final image = await controller.takePicture(); //här tas bilden
-      debugPrint('Bild sparad på: ${image
-          .path}'); // här kan vi skicka bilden till backend senare
+
+      if (!mounted) return;
+
+      setState(() {
+        capturedImage = image; // review läge ropas
+      });
+      //debugPrint('Bild sparad på: ${image  //osäker om detta behövs?
+      //    .path}'); // här kan vi skicka bilden till backend senare
     } catch (e) {
       debugPrint('$e');
     } finally {
@@ -85,7 +98,24 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   void _retakePicture() {
-    debugPrint('Ta om bild');
+    setState(() {
+      capturedImage = null;
+    });
+  }
+
+  void _cancelCapturedImage() {
+    setState(() {
+      capturedImage = null;
+    });
+
+  }
+
+  void _identifyBird() {
+    debugPrint('Identifiera fågel');
+  }
+
+  void _saveImage() {
+    debugPrint ('Spara bild');
   }
 
   @override
@@ -107,8 +137,20 @@ class _CameraScreenState extends State<CameraScreen> {
         children: [
           // första lagret (kamera live feed)
           Positioned.fill(
-            child: CameraPreview(controller),
-          ),
+            child: capturedImage == null
+                ? CameraPreview(controller)
+                : kIsWeb
+                  ? const Center(
+                      child: Text('Förhandsvisning av tagen bild stöds ännu inte',
+                             textAlign: TextAlign.center,
+                             style: TextStyle(color: Colors.white),
+                           ),
+            )
+                : Image.file(
+                    File(capturedImage!.path),
+                    fit: BoxFit.cover,
+                    ),
+                  ),
 
           // andra lagret: knappar ovanpå kamera live feed
           Positioned(
@@ -124,33 +166,23 @@ class _CameraScreenState extends State<CameraScreen> {
             ),
           ),
            Positioned(
-            left: 0,
-            right: 0,
+            left: 16,
+            right: 16,
             bottom: 40,  //position för camera controls
-            child: Column(
-              children: [
-                const Text(
-                  "Tryck för att identifiera fågel",
-                  style: TextStyle(
-                    color: Colors.white,
-                    shadows: [Shadow(blurRadius: 10)],
-                  ),
-                ),
-
-                const SizedBox(height: AppSpacing.md),
-
-                // Ta bildknappen
-                CameraBottomControls(
-                  isLeftActive: isFlashOn,
-                  onGalleryPressed: _toggleFlash,
-                  onShutterPressed: _takePicture,
-                  onSwitchCameraPressed: _retakePicture,
-                  isCaptureEnabled: !isTakingPicture,
-                ),
-              ],
-           ),
-          ),
-         ],
+            child: capturedImage == null ? CameraBottomControls(
+                onGalleryPressed: _toggleFlash,
+                onShutterPressed: _takePicture,
+                onSwitchCameraPressed: _retakePicture,
+                isCaptureEnabled: !isTakingPicture,
+                isLeftActive: isFlashOn,
+              )
+             : CameraFlowBottomBar(
+                onCancel: _cancelCapturedImage,
+                onIdentify: _identifyBird,
+                onSave: _saveImage,
+              ),
+            ),
+          ],
         ),
       ),
     );
