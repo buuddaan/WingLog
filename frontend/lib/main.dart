@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_layout.dart';
 import 'screens/welcome_screen.dart';
 import 'package:camera/camera.dart';
 import 'services/token_service.dart';
 import 'core/theme/app_theme.dart';
 
-List<CameraDescription> cameras = []; // Denna variabel ropar home_screen.dart på!
+List<CameraDescription> cameras = []; // Denna variabel ropar main_layout.dart på!
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,12 +67,11 @@ class _MyAppState extends State<MyApp> {
 
       // 3. LOGIKEN: Om inloggad -> Hem, annars -> Welcome (Login)
       home: _isLoggedIn
-          ? MyHomePage(
-        title: 'WingLog',
-        onLogout: _handleLogout, // Skickar med funktionen för att logga ut
+          ? MainLayout(  // ÄNDRA HÄR!
+        onLogout: _handleLogout,
       )
           : WelcomeScreen(
-        onLoginSuccess: _handleLoginSuccess, // Skickar med funktionen för lyckad inloggning
+        onLoginSuccess: _handleLoginSuccess,
       ),
     );
   }
