@@ -46,23 +46,18 @@ class AppBottomNav extends StatelessWidget {
           ),
           _buildNavItem(
             icon: AppIcons.myCollection,
-            label: 'Gemenskap',
-            index: 3,
-          ),
-          _buildNavItem(
-            icon: AppIcons.myCollection,
             label: 'Galleri',
-            index: 4,
+            index: 3,
           ),
           _buildNavItem(
             icon: AppIcons.soundSearch,
             label: 'Spela in ljud',
-            index: 5,
+            index: 4,
           ),
           _buildNavItem(
             icon: AppIcons.myCollection,
             label: 'TrueLogin',
-            index: 6,
+            index: 5,
           ),
         ],
       ),

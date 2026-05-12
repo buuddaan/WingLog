@@ -24,4 +24,7 @@ class AppColors {
 
   // Shadow
   static const Color shadow = Color(0x3F000000);
+
+  // Camera
+  static const Color cameraOverlayButton = Color(0x26081145);
 }
