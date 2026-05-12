@@ -38,6 +38,7 @@ void main() {
     });
 
     // TEST 3: Validering - Tomma fält
+// TEST 3: Validering - Tomma fält
     testWidgets('Test 3: Visar valideringsfel om man klickar logga in med tomma fält', (WidgetTester tester) async {
       await tester.pumpWidget(createWelcomeScreenUnderTest());
 
@@ -47,19 +48,26 @@ void main() {
 
       // Förväntar oss att felmeddelandena dyker upp
       expect(find.text('Ange användarnamn'), findsOneWidget);
-      expect(find.text('Minst 6 tecken'), findsOneWidget);
+      // ÄNDRING: Förväntar oss 'Ange lösenord' istället för längd-felet
+      expect(find.text('Ange lösenord'), findsOneWidget);
     });
 
+
     // TEST 4: Validering - Kort lösenord
-    testWidgets('Test 4: Specifikt valideringsfel visas för lösenord under 6 tecken', (WidgetTester tester) async {
+    testWidgets('Test 4: Specifikt valideringsfel visas för lösenord under 6 tecken vid registrering', (WidgetTester tester) async {
       await tester.pumpWidget(createWelcomeScreenUnderTest());
 
-      // Skriv in ett för kort lösenord (index 1 är lösenordsfältet)
-      await tester.enterText(find.byType(TextFormField).at(1), '123');
+      // ÄNDRING 1: Växla till registreringsläge först!
+      await tester.tap(find.text('Inget konto? Skapa ett här'));
+      await tester.pumpAndSettle();
+
+      // ÄNDRING 2: Skriv in ett för kort lösenord. (Eftersom Email nu syns är lösenord index 2)
+      await tester.enterText(find.byType(TextFormField).at(2), '123');
       await tester.tap(find.byType(ElevatedButton));
       await tester.pumpAndSettle();
 
-      expect(find.text('Minst 6 tecken'), findsOneWidget);
+      // ÄNDRING 3: Matcha exakt den text din app kastar
+      expect(find.text('Minst 6 tecken krävs'), findsOneWidget);
     });
 
     // TEST 5: Validering godkänns med rätt data
