@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_icons.dart';
 import '../atoms/app_icon.dart';
 
-
 class AppBottomNav extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onTap;
@@ -30,34 +29,29 @@ class AppBottomNav extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildNavItem(
-            icon: AppIcons.myCollection,
-            label: 'Inloggad',
-            index: 0,
-          ),
-          _buildNavItem(
-            icon: AppIcons.imageSearch,
+            icon: AppIcons.imageSearch, //Tog bort Inloggad och ändrade index på alla knappar med -1 / Axel
             label: 'Karta',
-            index: 1,
+            index: 0,
           ),
           _buildNavItem(
             icon: AppIcons.camera,
             label: 'Kamera',
-            index: 2,
+            index: 1,
           ),
           _buildNavItem(
             icon: AppIcons.myCollection,
             label: 'Galleri',
-            index: 3,
+            index: 2,
           ),
           _buildNavItem(
             icon: AppIcons.soundSearch,
             label: 'Spela in ljud',
-            index: 4,
+            index: 3,
           ),
           _buildNavItem(
             icon: AppIcons.myCollection,
             label: 'TrueLogin',
-            index: 5,
+            index: 4,
           ),
         ],
       ),
@@ -74,23 +68,27 @@ class AppBottomNav extends StatelessWidget {
 
     return GestureDetector(
       onTap: () => onTap(index),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AppIcon(
-            icon,
-            size: 24,
-            color: color,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
+      child: Container(
+        color: Colors.transparent, // ändrat här för klickytan ska bli större / Axel
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppIcon(
+              icon,
+              size: 24,
               color: color,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: color,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, //Ändrade så att isSelected är med lite fetstil så man ser vilken man är på / Axel
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
