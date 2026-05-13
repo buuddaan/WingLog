@@ -1,9 +1,9 @@
-
+import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb;
+// import 'package:flutter/foundation.dart' show kIsWeb; /Används inte just nu
 import '../services/token_service.dart';
 
 //enkel modell för att hålla reda på bildens URL och vilken fågelart (mapp) den tillhör
@@ -15,8 +15,9 @@ class BirdPhoto {
 
   factory BirdPhoto.fromJson(Map<String, dynamic> json) {
     return BirdPhoto(
-      imageUrl: json['imageUrl'],
-      birdSpecies: json['birdSpecies'],
+      imageUrl: json['imageUrl'] ?? '',
+      // Backend returnerar 'folderName', inte 'birdSpecies'
+      birdSpecies: json['folderName'] ?? 'Oidentifierade',
     );
   }
 }
@@ -73,50 +74,60 @@ class _GalleryScreenState extends State<GalleryScreen> {
   }
 
   // LADDA UPP EN BILD TILL BACKEND ---
+
   Future<void> _uploadPhoto(String imagePath, String species) async {
-    // Visa en laddningsindikator medan bilden skickas
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Laddar upp bild...')),
     );
 
     try {
       final token = await TokenService.getToken();
-      var request = http.MultipartRequest('POST', Uri.parse('$_baseUrl/upload'));
 
-      // Lägg till token för säkerhet?
-      request.headers['Authorization'] = 'Bearer $token';
+      // 1. Generera det som backend förväntar sig
+      final String sessionId = const Uuid().v4();
+      final String currentDate = DateTime.now().toIso8601String();
 
-      // Bifoga "mapp-namnet" (fågelarten) som text
-      request.fields['birdSpecies'] = species;
+      // 2. STEG 1: Ladda upp själva bilden
+      var uploadRequest = http.MultipartRequest('POST', Uri.parse('$_baseUrl/upload'));
+      uploadRequest.headers['Authorization'] = 'Bearer $token';
 
-      // Bifoga själva bildfilen (Koden skiljer sig lite för Web vs Mac/Mobil)
-      if (kIsWeb) {
-        // På webben måste vi skicka bytes
-        // (Kräver 'package:http/http.dart' och att XFile läses som bytes)
-        // Notera: Detta är en förenkling, webbuppladdning kan kräva en Uint8List
-        // request.files.add(await http.MultipartFile.fromPath('file', imagePath)); Häslningar från gemini
-      } else {
-        // På Mac/Android/iOS ska detta funka fint tror jag
-        request.files.add(await http.MultipartFile.fromPath('file', imagePath));
-      }
+      // Skicka in sessionId och date som textfält
+      uploadRequest.fields['sessionId'] = sessionId;
+      uploadRequest.fields['date'] = currentDate;
+      uploadRequest.files.add(await http.MultipartFile.fromPath('file', imagePath));
 
-      // Skicka anropet
-      var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
+      var streamedResponse = await uploadRequest.send();
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        // Uppdatera galleriet när uppladdning är klar
-        _fetchPhotos();
-        if(mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Bild uppladdad!')),
-          );
+      if (streamedResponse.statusCode == 200 || streamedResponse.statusCode == 201) {
+
+        // 3. STEG 2: Säg åt backend vilken fågelart (mapp) sessionen tillhör
+        final saveResponse = await http.put(
+          Uri.parse('$_baseUrl/save-to-folder?sessionId=$sessionId&folderName=${Uri.encodeComponent(species)}'),
+          headers: {'Authorization': 'Bearer $token'},
+        );
+
+        if (saveResponse.statusCode == 200) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Bild sparad i ditt galleri!')),
+            );
+          }
+
+          // OBS: Detta anrop kommer fortfarande ge fel tills du fixar GET-metoden i backend
+          _fetchPhotos();
+        } else {
+          throw Exception('Kunde inte spara fågelarten på servern.');
         }
       } else {
-        throw Exception('Uppladdning misslyckades. Status: ${response.statusCode}');
+        throw Exception('Uppladdningen av bilden misslyckades.');
       }
     } catch (e) {
       debugPrint("Fel vid uppladdning: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fel: $e')),
+        );
+      }
     }
   }
 

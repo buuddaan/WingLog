@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -34,6 +35,13 @@ public class PhotoController {
         UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
         UploadImageRequest uploadRequest = new UploadImageRequest(file, sessionId, date);
         return ResponseEntity.ok(photoService.uploadImage(uploadRequest, userId));
+    }
+
+    /** Från Axel**/
+    @GetMapping("/my-photos")
+    public ResponseEntity<List<ImageResponse>> getMyPhotos(HttpServletRequest request) {
+        UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
+        return ResponseEntity.ok(photoService.getMyPhotos(userId));
     }
 
     @PostMapping("/identify")
