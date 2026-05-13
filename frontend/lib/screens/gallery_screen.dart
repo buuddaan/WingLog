@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-// import 'package:flutter/foundation.dart' show kIsWeb; /Används inte just nu
 import '../services/token_service.dart';
 
 //enkel modell för att hålla reda på bildens URL och vilken fågelart (mapp) den tillhör
