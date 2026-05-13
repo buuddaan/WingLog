@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -75,32 +76,44 @@ class _GalleryScreenState extends State<GalleryScreen> {
 
   // LADDA UPP EN BILD TILL BACKEND ---
 
-  Future<void> _uploadPhoto(String imagePath, String species) async {
+  // ÄNDRING: Parametern är nu XFile imageFile
+  Future<void> _uploadPhoto(XFile imageFile, String species) async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Laddar upp bild...')),
     );
 
     try {
       final token = await TokenService.getToken();
-
-      // 1. Generera det som backend förväntar sig
       final String sessionId = const Uuid().v4();
       final String currentDate = DateTime.now().toIso8601String();
 
-      // 2. STEG 1: Ladda upp själva bilden
       var uploadRequest = http.MultipartRequest('POST', Uri.parse('$_baseUrl/upload'));
       uploadRequest.headers['Authorization'] = 'Bearer $token';
 
-      // Skicka in sessionId och date som textfält
       uploadRequest.fields['sessionId'] = sessionId;
       uploadRequest.fields['date'] = currentDate;
-      uploadRequest.files.add(await http.MultipartFile.fromPath('file', imagePath));
+
+      // ---- MAGIN FÖR ATT LÖSA FELMEDDELANDET ----
+      if (kIsWeb) {
+        // På webben läser vi bilden som bytes direkt i webbläsaren
+        final bytes = await imageFile.readAsBytes();
+        uploadRequest.files.add(http.MultipartFile.fromBytes(
+          'file',
+          bytes,
+          filename: imageFile.name,
+        ));
+      } else {
+        // På mobil/Mac kan vi fortfarande använda den snabbare fromPath (dart:io)
+        uploadRequest.files.add(await http.MultipartFile.fromPath(
+          'file',
+          imageFile.path,
+        ));
+      }
+      // -------------------------------------------
 
       var streamedResponse = await uploadRequest.send();
 
       if (streamedResponse.statusCode == 200 || streamedResponse.statusCode == 201) {
-
-        // 3. STEG 2: Säg åt backend vilken fågelart (mapp) sessionen tillhör
         final saveResponse = await http.put(
           Uri.parse('$_baseUrl/save-to-folder?sessionId=$sessionId&folderName=${Uri.encodeComponent(species)}'),
           headers: {'Authorization': 'Bearer $token'},
@@ -112,8 +125,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
               const SnackBar(content: Text('Bild sparad i ditt galleri!')),
             );
           }
-
-          // OBS: Detta anrop kommer fortfarande ge fel tills du fixar GET-metoden i backend
           _fetchPhotos();
         } else {
           throw Exception('Kunde inte spara fågelarten på servern.');
@@ -124,20 +135,19 @@ class _GalleryScreenState extends State<GalleryScreen> {
     } catch (e) {
       debugPrint("Fel vid uppladdning: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fel: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Fel: $e')));
       }
     }
   }
 
   // DIALOG FÖR ATT ANGE FÅGELART (MAPP) ---
   // Denna popup visas direkt efter att man valt en bild
-  Future<void> _askForSpeciesAndUpload(String imagePath) async {
+  // ÄNDRING: Parametern är nu XFile imageFile
+  Future<void> _askForSpeciesAndUpload(XFile imageFile) async {
     String species = '';
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // Tvinga användaren att svara eller avbryta
+      barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Vilken fågel är detta?'),
@@ -155,7 +165,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
               onPressed: () {
                 Navigator.of(dialogContext).pop();
                 if (species.isNotEmpty) {
-                  _uploadPhoto(imagePath, species);
+                  // ÄNDRING: Skicka vidare XFile
+                  _uploadPhoto(imageFile, species);
                 }
               },
             ),
@@ -169,15 +180,16 @@ class _GalleryScreenState extends State<GalleryScreen> {
   Future<void> _pickImageFromGallery() async {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
     if (pickedFile != null && mounted) {
-      // Istället för att bara spara i minnet, fråga om arten och laddar upp!
-      _askForSpeciesAndUpload(pickedFile.path);
+      // ÄNDRING: Skickar hela XFile-objektet istället för .path
+      _askForSpeciesAndUpload(pickedFile);
     }
   }
 
   Future<void> _takePicture() async {
     final XFile? photo = await _picker.pickImage(source: ImageSource.camera, imageQuality: 80);
     if (photo != null && mounted) {
-      _askForSpeciesAndUpload(photo.path);
+      // ÄNDRING: Skickar hela XFile-objektet istället för .path
+      _askForSpeciesAndUpload(photo);
     }
   }
 
