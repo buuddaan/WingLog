@@ -41,6 +41,19 @@ services:
     environment:
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
 
+  photo-service:
+    build:
+      context: .
+      dockerfile: photo-service/Dockerfile
+    ports:
+      - "8086:8086"
+    env_file:
+      - .env
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://aws-1-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_PROFILES_ACTIVE: docker
+
   # ROTERAS OCH LÄGGS I .ENV SEN!!
   auth-service:
     build:
