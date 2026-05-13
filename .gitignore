@@ -42,6 +42,7 @@ build/
 # MILJÖVARIABLER
 .env
 .env.local
+credentials.json
 
 
 
