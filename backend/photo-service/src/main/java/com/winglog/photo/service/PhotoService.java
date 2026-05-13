@@ -70,7 +70,13 @@ public class PhotoService {
             birdImageRepository.save(image);
         }
     }
-
+    /** Från Axel **/
+    public List<ImageResponse> getMyPhotos(UUID userId) {
+        List<BirdImage> images = birdImageRepository.findByUserId(userId);
+        return images.stream()
+                .map(img -> new ImageResponse(img.getId(), img.getImageUrl(), img.getFolderName(), img.getSessionId(), img.getDate()))
+                .toList();
+    }
     /**
      * Sparar alla bilder får en session i en oidentifierad mapp.
      * Mappnamn genereras automatiskt
