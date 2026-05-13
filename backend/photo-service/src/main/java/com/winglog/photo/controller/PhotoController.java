@@ -29,9 +29,10 @@ public class PhotoController {
     @PostMapping("/upload")
     public ResponseEntity<ImageResponse> uploadImage(
             HttpServletRequest request,
-            @RequestParam MultipartFile file,
-            @RequestParam UUID sessionId,
-            @RequestParam LocalDateTime date) throws IOException {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("sessionId") UUID sessionId,
+            @RequestParam("date") @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) LocalDateTime date) throws IOException {
+
         UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
         UploadImageRequest uploadRequest = new UploadImageRequest(file, sessionId, date);
         return ResponseEntity.ok(photoService.uploadImage(uploadRequest, userId));
@@ -46,7 +47,7 @@ public class PhotoController {
 
     @PostMapping("/identify")
     public ResponseEntity<IdentifyResponse> identifyImage(
-            @RequestParam MultipartFile file
+            @RequestParam("file") MultipartFile file
     ) throws IOException {
         return ResponseEntity.ok(photoService.identifyImage(file));
     }
@@ -54,8 +55,8 @@ public class PhotoController {
     @PutMapping("/save-to-folder")
     public ResponseEntity<Void> saveToFolder(
             HttpServletRequest request,
-            @RequestParam UUID sessionId,
-            @RequestParam String folderName) {
+            @RequestParam("sessionId") UUID sessionId,
+            @RequestParam("folderName") String folderName) {
 
         UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
         photoService.saveToFolder(sessionId, userId, folderName);
@@ -65,26 +66,27 @@ public class PhotoController {
     @PutMapping("/save-unidentified")
     public ResponseEntity<Void> saveAsUnidentified(
             HttpServletRequest request,
-            @RequestParam UUID sessionId) {
+            @RequestParam("sessionId") UUID sessionId) {
         UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
         photoService.saveAsUnidentified(sessionId, userId);
         return ResponseEntity.ok().build();
-
     }
 
     @DeleteMapping("/delete-session")
     public ResponseEntity<Void> deleteSession(
             HttpServletRequest request,
-            @RequestParam UUID sessionId) {
+            @RequestParam("sessionId") UUID sessionId) {
 
         UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
         photoService.deleteSession(sessionId, userId);
         return ResponseEntity.noContent().build();
-
     }
 
     @DeleteMapping("/delete-image")
-    public ResponseEntity<Void> deleteImage(HttpServletRequest request, @RequestParam UUID imageId) {
+    public ResponseEntity<Void> deleteImage(
+            HttpServletRequest request,
+            @RequestParam("imageId") UUID imageId) {
+
         UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
         photoService.deleteImage(imageId, userId);
         return ResponseEntity.noContent().build();
