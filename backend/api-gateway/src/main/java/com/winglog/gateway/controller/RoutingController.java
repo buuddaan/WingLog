@@ -50,10 +50,19 @@ public class RoutingController {
 
         String path = request.getRequestURI();
         String method = request.getMethod();
+
+        // NYTT: Hämta query-parametrar (allt efter ?)
+        String queryString = request.getQueryString();
+
         String targetUrl = resolveTargetUrl(path);
 
         if (targetUrl == null) {
             return ResponseEntity.notFound().build();
+        }
+
+        // NYTT: Klistra på parametrarna på url:en igen innan vi skickar vidare
+        if (queryString != null) {
+            targetUrl = targetUrl + "?" + queryString;
         }
 
         // Hämta email och userId som JwtAuthFilter lade på requesten
@@ -88,7 +97,7 @@ public class RoutingController {
             requestSpec.body(body);
         }
 
-        // ÄNDRING 4: Returnera byte[] istället för String
+        // Returnera byte[] istället för String
         return requestSpec.retrieve().toEntity(byte[].class);
     }
 
