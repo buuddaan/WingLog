@@ -55,6 +55,17 @@ services:
       SPRING_PROFILES_ACTIVE: docker
 
   # ROTERAS OCH LÄGGS I .ENV SEN!!
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
   auth-service:
     build:
       context: .
