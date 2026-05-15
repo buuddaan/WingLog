@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:frontend/design_system/molecules/camera_bottom_controls.dart';
@@ -242,6 +241,7 @@ class _CameraScreenState extends State<CameraScreen> {
         final candidates = data['candidates'] as List;
         await _showIdentifyResultDialog(candidates);
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Kunde inte identifiera fågeln, försök med en annan bild')),
         );
