@@ -6,7 +6,17 @@ import 'package:camera/camera.dart';
 import 'package:frontend/design_system/molecules/camera_bottom_controls.dart';
 // import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/design_system/molecules/camera_flow_bottom_bar.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:frontend/services/token_service.dart';
+import 'package:uuid/uuid.dart';
 
+class SessionImage {
+  final XFile file;
+  final String imageId;
+
+  SessionImage ({required this.file, required this.imageId});
+}
 
 class CameraScreen extends StatefulWidget {
   //variabel som lagrar alla olika kameror (Fram, bak, vid)
@@ -26,8 +36,12 @@ class _CameraScreenState extends State<CameraScreen> {
   bool isCameraReady = false; // om kameran är färdigstartad eller ej
   bool isTakingPicture = false;//om bild håller på att tas just nu
   bool isFlashOn = false;
- 
-  XFile? capturedImage; //för att camera bottom nav med ta bort, identifiera etc ska dyka up
+
+  List<SessionImage> sessionImages = [];
+  int? selectedImageIndex;
+  bool isLoading = false;
+  bool isViewingImage = false;
+  final String sessionId = const Uuid().v4();
 
   @override
   void initState(){
@@ -62,8 +76,8 @@ class _CameraScreenState extends State<CameraScreen> {
     super.dispose();
   }
 
+  ///Tar bild med kameran och laddar upp till backend. bilden läggs till i [sessionImages].
   Future<void> _takePicture() async { // ta inte bild om kameran ej är redo/bild redan håller på att tas
-    // förklara
     if (!isCameraReady || isTakingPicture) return;
 
     setState(() {
@@ -72,13 +86,17 @@ class _CameraScreenState extends State<CameraScreen> {
 
     try {
       final image = await controller.takePicture(); //här tas bilden
+      final imageId = await _uploadImage(image);
 
-      if (!mounted) return;
+      if(!mounted) return;
 
-      setState(() {
-        capturedImage = image; // review läge ropas
-      });
-      //debugPrint('Bild sparad på: ${image  //osäker om detta behövs?
+      if(imageId != null) {
+        setState(() {
+          sessionImages.add(SessionImage(file: image, imageId: imageId));
+          selectedImageIndex = null;
+        });
+      }
+
       //    .path}'); // här kan vi skicka bilden till backend senare
     } catch (e) {
       debugPrint('$e');
@@ -91,31 +109,252 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
+  ///Laddar upp en bild till backend via API Gatewayen.
+  ///Skickar bild som multipartfile tillsammans med sessionId och datum
+  ///returnerar bildens id från backend om uppladdning lyckas annars null.
+  Future<String?> _uploadImage(XFile image) async {
+    try {
+      final token = await TokenService.getToken();
+      final now = DateTime.now().toIso8601String();
+
+      var request = http.MultipartRequest('POST', Uri.parse('http://localhost:8080/photos/upload'),);
+      request.headers['Authorization'] = 'Bearer $token';
+      request.fields['sessionId'] = sessionId;
+      request.fields['date'] = now;
+
+      final bytes = await image.readAsBytes();
+      request.files.add(http.MultipartFile.fromBytes('file', bytes,  filename: image.name));
+
+      final streamed = await request.send();
+      final response = await http.Response.fromStream(streamed);
+
+      if(response.statusCode == 200 || response.statusCode == 201){
+        final data = jsonDecode(response.body);
+        return data['id'] as String;
+      }
+      return null;
+    } catch (exception) {
+      debugPrint('Fel vid uppladdning: $exception');
+      return null;
+    }
+  }
+
   void _toggleFlash () {
     setState(() {
       isFlashOn = !isFlashOn;
     });
   }
 
-  void _retakePicture() {
-    setState(() {
-      capturedImage = null;
-    });
+  ///Hanterar avbrytning av kamerasessionen.
+  ///Ombilder tagits visas en dialog där användaren kan välja att radera alla.
+  ///om ja anropas _deleteSession.
+  Future<void> _onCancel() async {
+    if (sessionImages.isEmpty){
+      Navigator.pop(context);
+      return;
+    }
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Avbryt Session'),
+        content: const Text('Vill du radera alla bilder från denna session?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Behåll'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Radera')
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true) {
+      await _deleteSession();
+    }
+
+    if(mounted) Navigator.pop(context);
   }
 
-  void _cancelCapturedImage() {
-    setState(() {
-      capturedImage = null;
-    });
+  ///Radarear alla bilder som tillhör en session
+  Future<void> _deleteSession() async {
+    try {
+      final token = await TokenService.getToken();
+      await http.delete(
+        Uri.parse('http://localhost:8080/photos/delete-session?sessionId=$sessionId'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+    } catch (exception) {
+      debugPrint('Fel vid radering av session: $exception');
+    }
+  }
+
+  ///Raderar en enskild bild från backend och tar bort denna från sessionImages.
+  ///Återgår till kameraläge efter radering
+  Future<void> _deleteImage(int index) async {
+    try {
+      final token = await TokenService.getToken();
+      final imageId = sessionImages[index].imageId;
+
+      await http.delete(
+        Uri.parse('http://localhost:8080/photos/delete-image?imageId=$imageId'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      setState(() {
+        sessionImages.removeAt(index);
+        selectedImageIndex = null;
+        isViewingImage = false;
+      });
+    } catch (exception) {
+      debugPrint('Fel vid radering av bild: $exception');
+    }
+  }
+
+  ///Identifierar fågelartern på den markerade bilden via Google Vision API.
+  ///Kräver en tumbnail markerad via selectedImageIndex
+  ///visar identifieringsresultat i en dialog där användaren kan namnge en mapp
+  Future<void> _identifyBird() async {
+    if (selectedImageIndex == null) return;
+
+    setState(() => isLoading = true);
+    try {
+      final token = await TokenService.getToken();
+      final image = sessionImages[selectedImageIndex!].file;
+
+      var request = http.MultipartRequest(
+        'POST', Uri.parse('http://localhost:8080/photos/identify'),
+      );
+      request.headers['Authorization'] = 'Bearer $token';
+
+      final bytes = await image.readAsBytes();
+      request.files.add(http.MultipartFile.fromBytes(
+        'file', bytes, filename: image.name,)
+      );
+
+      final steamed = await request.send();
+      final response = await http.Response.fromStream(steamed);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final candidates = data['candidates'] as List;
+        await _showIdentifyResultDialog(candidates);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Kunde inte identifiera fågeln, försök med en annan bild')),
+        );
+      }
+    } catch (exception) {
+      debugPrint('Fel vid identifiering: $exception');
+    } finally {
+      if (mounted) setState (() => isLoading = false);
+    }
+  }
+
+  ///Visar en dialog med identifieringsresultat från Google Vision API.
+  /// Listar topp 5 fågelarter som är möjliga med sannolikhet i procent.
+  Future<void> _showIdentifyResultDialog(List candidates) async {
+    final folderController = TextEditingController();
+
+    if(candidates.isNotEmpty) {
+      folderController.text =candidates.first['species'] ?? '';
+    }
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title:const Text('Identifieringsresultat'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Möjliga arter:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            ...candidates.take(5).map((c) {
+              final percent = ((c['confidence'] as double) * 100).toStringAsFixed(0);
+              return Text('${c['species']} - $percent%');
+            }),
+            const SizedBox(height: 16),
+            const Text('Namnge mappen;'),
+            const SizedBox(height: 8),
+            TextField(
+              controller: folderController,
+              decoration: const InputDecoration(
+                hintText: 'T.ex. Blåmes',
+                border: OutlineInputBorder(),
+               ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed:  () => Navigator.pop(ctx),
+            child: const Text('Avbryt'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final folderName = folderController.text.trim();
+              if (folderName.isEmpty) return;
+              Navigator.pop(ctx);
+              await _saveToFolder(folderName);
+            },
+            child: const Text('Spara i mapp'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Sparar alla bilder i sessionen i en namnvigen mapp
+  /// Stänger kameran efter att bilerna sparats
+  Future<void> _saveToFolder(String folderName) async {
+    try {
+      final token = await TokenService.getToken();
+      await http.put(
+        Uri.parse('http://localhost:8080/photos/save-to-folder?sessionId=$sessionId&folderName=${Uri.encodeComponent(folderName)}'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sparad i mappen "$folderName"')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (exception) {
+      debugPrint('Fel vid sparning: $exception');
+    }
 
   }
 
-  void _identifyBird() {
-    debugPrint('Identifiera fågel');
-  }
+  ///Sparar alla bilder i sessionen som oidentifierade i backend.
+  ///Stänger kameran efter att bilder sparats.
+  Future<void> _saveImage() async {
+    if (sessionImages.isEmpty) return;
 
-  void _saveImage() {
-    debugPrint ('Spara bild');
+    setState(() => isLoading = true);
+
+    try {
+      final token = await TokenService.getToken();
+      await http.put(
+        Uri.parse('http://localhost:8080/photos/save-unidentified?sessionId=$sessionId'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Bilder sparade som oidentifierade')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (exception) {
+      debugPrint('Fel uppstod när bilder skulle sparas: $exception');
+
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
   }
 
   @override
@@ -135,22 +374,79 @@ class _CameraScreenState extends State<CameraScreen> {
       body: SafeArea(
         child: Stack(
         children: [
-          // första lagret (kamera live feed)
           Positioned.fill(
-            child: capturedImage == null
-                ? CameraPreview(controller)
-                : kIsWeb
-                  ? const Center(
-                      child: Text('Förhandsvisning av tagen bild stöds ännu inte',
-                             textAlign: TextAlign.center,
-                             style: TextStyle(color: Colors.white),
-                           ),
+            child: isViewingImage && selectedImageIndex != null ? Image.file(
+                File(sessionImages[selectedImageIndex!].file.path),
+              fit: BoxFit.cover,
             )
-                : Image.file(
-                    File(capturedImage!.path),
-                    fit: BoxFit.cover,
-                    ),
+                : CameraPreview(controller),
+          ),
+
+          if (sessionImages.isNotEmpty)
+            Positioned(
+              top: 12,
+              left: 12,
+              right: 12,
+              child: SizedBox(
+                height: 72,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: sessionImages.length,
+                  itemBuilder: (context, index) {
+                    final isSelected = selectedImageIndex == index;
+                    return GestureDetector(
+                      onTap: () => setState(() {
+                        selectedImageIndex = index;
+                        isViewingImage = true;
+                      }),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: isSelected ? Colors.blue : Colors.white,
+                            width: isSelected ? 3 : 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.file(
+                            File(sessionImages[index].file.path),
+                            width: 60,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+          if (isViewingImage && selectedImageIndex != null)
+            Positioned(
+              bottom:40,
+              left: 16,
+              right: 16,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton.icon(
+                    onPressed: () => setState (() {
+                      isViewingImage = false;
+                      selectedImageIndex = null;
+                    }),
+                    icon:const Icon(Icons.arrow_back, color: Colors.white),
+                    label: const Text ('Tillbacka', style: TextStyle(color: Colors.white)),
                   ),
+                  TextButton.icon(
+                    onPressed: () => _deleteImage(selectedImageIndex!),
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    label: const Text('Radera', style: TextStyle(color: Colors.red)),
+                  ),
+                ],
+              ),
+            ),
 
           // andra lagret: knappar ovanpå kamera live feed
           Positioned(
@@ -169,17 +465,18 @@ class _CameraScreenState extends State<CameraScreen> {
             left: 16,
             right: 16,
             bottom: 40,  //position för camera controls
-            child: capturedImage == null ? CameraBottomControls(
+            child: sessionImages.isEmpty ? CameraBottomControls(
                 onGalleryPressed: _toggleFlash,
                 onShutterPressed: _takePicture,
-                onSwitchCameraPressed: _retakePicture,
-                isCaptureEnabled: !isTakingPicture,
+                onSwitchCameraPressed: null,
+                isCaptureEnabled:  !isTakingPicture,
                 isLeftActive: isFlashOn,
-              )
+            )
              : CameraFlowBottomBar(
-                onCancel: _cancelCapturedImage,
+                onCancel: _onCancel,
                 onIdentify: _identifyBird,
                 onSave: _saveImage,
+                isIdentifyEnabled: selectedImageIndex != null,
               ),
             ),
           ],
