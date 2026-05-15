@@ -4,12 +4,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
 
-import java.util.Collections;
+import java.net.http.HttpClient;
 
 @RestController
 public class RoutingController {
@@ -38,7 +39,12 @@ public class RoutingController {
     private String audioServiceUrl;
 
     public RoutingController() {
-        this.restClient = RestClient.create();
+        HttpClient httpClient = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NEVER)
+                .build();
+        this.restClient = RestClient.builder()
+                .requestFactory(new JdkClientHttpRequestFactory(httpClient))
+                .build();
     }
 
     // Fångar upp ALLA requests under /gateway/**
@@ -96,7 +102,9 @@ public class RoutingController {
         // Ta bort /gateway-prefixet
         String strippedPath = path.replaceFirst("/gateway", "");
 
-        if (strippedPath.startsWith("/auth")) {
+        if (strippedPath.startsWith("/oauth2") || strippedPath.startsWith("/login/oauth2")) {
+            return authServiceUrl + strippedPath;
+        } else if (strippedPath.startsWith("/auth")) {
             return authServiceUrl + strippedPath;
         } else if (strippedPath.startsWith("/users")) {
             return userServiceUrl + strippedPath;

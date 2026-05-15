@@ -105,7 +105,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   // --- HÄR ÄR DEN NYA GOOGLE-INLOGGNINGEN ---
-  static const String _googleLoginUrl = 'http://localhost:8080/gateway/auth/login';
+  static const String _googleLoginUrl = 'http://localhost:8080/gateway/oauth2/authorization/google';
 
   Future<void> _handleGoogleSignIn() async {
     final Uri googleLoginUri = Uri.parse(_googleLoginUrl);
