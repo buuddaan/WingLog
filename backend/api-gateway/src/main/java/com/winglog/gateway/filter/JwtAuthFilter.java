@@ -36,6 +36,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         request.removeAttribute("X-User-Email");
         request.removeAttribute("X-User-Id");
 
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String path = request.getRequestURI();
 
         // Släpp igenom publika endpoints utan JWT-kontroll /EF

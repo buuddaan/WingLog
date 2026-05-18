@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -9,12 +8,14 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:frontend/services/token_service.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:typed_data';
 
 class SessionImage {
   final XFile file;
   final String imageId;
+  final Uint8List? bytes;
 
-  SessionImage ({required this.file, required this.imageId});
+  SessionImage ({required this.file, required this.imageId, this.bytes});
 }
 
 class CameraScreen extends StatefulWidget {
@@ -41,6 +42,7 @@ class _CameraScreenState extends State<CameraScreen> {
   bool isLoading = false;
   bool isViewingImage = false;
   final String sessionId = const Uuid().v4();
+  final String _baseUrl = 'http://localhost:8080/gateway';
 
   @override
   void initState(){
@@ -90,8 +92,9 @@ class _CameraScreenState extends State<CameraScreen> {
       if(!mounted) return;
 
       if(imageId != null) {
+        final bytes = await image.readAsBytes();
         setState(() {
-          sessionImages.add(SessionImage(file: image, imageId: imageId));
+          sessionImages.add(SessionImage(file: image, imageId: imageId, bytes: bytes));
           selectedImageIndex = null;
         });
       }
@@ -116,7 +119,7 @@ class _CameraScreenState extends State<CameraScreen> {
       final token = await TokenService.getToken();
       final now = DateTime.now().toIso8601String();
 
-      var request = http.MultipartRequest('POST', Uri.parse('http://localhost:8080/photos/upload'),);
+      var request = http.MultipartRequest('POST', Uri.parse('$_baseUrl/photos/upload'),);
       request.headers['Authorization'] = 'Bearer $token';
       request.fields['sessionId'] = sessionId;
       request.fields['date'] = now;
@@ -182,7 +185,7 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       final token = await TokenService.getToken();
       await http.delete(
-        Uri.parse('http://localhost:8080/photos/delete-session?sessionId=$sessionId'),
+        Uri.parse('$_baseUrl/photos/delete-session?sessionId=$sessionId'),
         headers: {'Authorization': 'Bearer $token'},
       );
     } catch (exception) {
@@ -198,7 +201,7 @@ class _CameraScreenState extends State<CameraScreen> {
       final imageId = sessionImages[index].imageId;
 
       await http.delete(
-        Uri.parse('http://localhost:8080/photos/delete-image?imageId=$imageId'),
+        Uri.parse('$_baseUrl/photos/delete-image?imageId=$imageId'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -224,7 +227,7 @@ class _CameraScreenState extends State<CameraScreen> {
       final image = sessionImages[selectedImageIndex!].file;
 
       var request = http.MultipartRequest(
-        'POST', Uri.parse('http://localhost:8080/photos/identify'),
+        'POST', Uri.parse('$_baseUrl/photos/identify'),
       );
       request.headers['Authorization'] = 'Bearer $token';
 
@@ -314,7 +317,7 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       final token = await TokenService.getToken();
       await http.put(
-        Uri.parse('http://localhost:8080/photos/save-to-folder?sessionId=$sessionId&folderName=${Uri.encodeComponent(folderName)}'),
+        Uri.parse('$_baseUrl/photos/save-to-folder?sessionId=$sessionId&folderName=${Uri.encodeComponent(folderName)}'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -339,7 +342,7 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       final token = await TokenService.getToken();
       await http.put(
-        Uri.parse('http://localhost:8080/photos/save-unidentified?sessionId=$sessionId'),
+        Uri.parse('$_baseUrl/photos/save-unidentified?sessionId=$sessionId'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -375,9 +378,8 @@ class _CameraScreenState extends State<CameraScreen> {
         child: Stack(
         children: [
           Positioned.fill(
-            child: isViewingImage && selectedImageIndex != null ? Image.file(
-                File(sessionImages[selectedImageIndex!].file.path),
-              fit: BoxFit.cover,
+            child: isViewingImage && selectedImageIndex != null && sessionImages[selectedImageIndex!].bytes != null ? Image.memory(
+              sessionImages[selectedImageIndex!].bytes!, fit: BoxFit.cover,
             )
                 : CameraPreview(controller),
           ),
@@ -410,13 +412,15 @@ class _CameraScreenState extends State<CameraScreen> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(6),
-                          child: Image.file(
-                            File(sessionImages[index].file.path),
-                            width: 60,
-                            fit: BoxFit.cover,
+                          child: sessionImages[index].bytes != null
+                              ? Image.memory(
+                                  sessionImages[index].bytes!,
+                                  width: 60,
+                                  fit: BoxFit.cover,
+                                )
+                              : const Icon(Icons.image, color: Colors.white),
                           ),
                         ),
-                      ),
                     );
                   },
                 ),
