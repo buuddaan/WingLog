@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import'package:frontend/core/theme/app_gradients.dart';
-import 'package:frontend/core/theme/app_images.dart';
+import 'package:frontend/core/resources/app_images.dart';
 import 'package:frontend/core/theme/app_sizes.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
 

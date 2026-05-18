@@ -92,4 +92,25 @@ public class PhotoController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/rename-folder")
+    public ResponseEntity<Void> renameFolder(
+            HttpServletRequest request,
+            @RequestParam("oldName") String oldName,
+            @RequestParam("newName") String newName) {
+
+        UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
+        photoService.renameFolder(oldName, newName, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/delete-folder")
+    public ResponseEntity<Void> deleteFolder(
+            HttpServletRequest request,
+            @RequestParam("folderName") String folderName) {
+
+        UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
+        photoService.deleteFolder(folderName, userId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

@@ -81,7 +81,7 @@ public class RoutingController {
         // Bygg och skicka vidare requesten
         RestClient.RequestBodySpec requestSpec = restClient
                 .method(HttpMethod.valueOf(method))
-                .uri(targetUrl);
+                .uri(java.net.URI.create(targetUrl));
 
         // Axel,  Hitta rätt Content-Type istället för att hårdkoda JSON
         if (contentType != null) {
