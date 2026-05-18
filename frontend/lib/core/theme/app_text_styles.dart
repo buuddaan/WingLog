@@ -41,6 +41,36 @@ class AppTextStyles {
     color: AppColors.textPrimary,
   );
 
+  static const TextStyle bodyBold = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+  );
+
+  // Buttons
+  static const TextStyle buttonPrimary = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle buttonSecondary = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+  );
+
+  // Labels / small UI text
+  static const TextStyle label = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textPrimary,
+  );
+
   static const TextStyle microCopy = TextStyle(
     fontFamily: fontFamily,
     fontSize: 10,

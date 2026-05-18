@@ -10,7 +10,7 @@ class AppColors {
 
   // Neutral
   static const Color surface = Color(0xFFF4FFFD);
-  static const Color softUi = Color(0xFFF1F3FB);
+  static const Color softUi = Color(0xFFF1F3FB); //ändra färg och navbar
 
   // Text
   static const Color textPrimary = Color(0xFF081145);
@@ -27,4 +27,6 @@ class AppColors {
 
   // Camera
   static const Color cameraOverlayButton = Color(0x26081145);
+
+  static const Color dialogBackground = Color(0xFF7F89A8);
 }

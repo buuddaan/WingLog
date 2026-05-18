@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
-import 'package:frontend/design_system/atoms/app_button.dart';
+import 'package:frontend/design_system/atoms/primary_gradient_button.dart';
 import 'package:frontend/design_system/atoms/app_text_field.dart';
 
 class LoginForm extends StatelessWidget {
@@ -50,7 +50,7 @@ class LoginForm extends StatelessWidget {
 
           const SizedBox(height: AppSpacing.lg),
 
-          AppButton.primaryLogin(
+          PrimaryGradientButton.filled(
             text: 'Logga in',
             onPressed: () {},
           ),
@@ -84,7 +84,7 @@ class LoginForm extends StatelessWidget {
 
           const SizedBox(height: AppSpacing.lg),
 
-          AppButton.googleLogin(
+          PrimaryGradientButton.gradient(
             text: 'Fortsätt Med Google',
             onPressed: () {},
           ),

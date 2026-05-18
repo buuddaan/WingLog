@@ -32,15 +32,12 @@ class CameraIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final buttonSize = size ?? AppSizes.cameraControlButtonSize;
-    final currentIconSize = iconSize ?? AppSizes.cameraControlIconSize;
+
 
     final currentBackgroundColor = isActive
         ? (activeBackgroundColor ?? AppColors.softUi)
         : (backgroundColor ?? AppColors.shadow);
 
-    final currentIconColor = isActive
-        ? (activeIconColor ?? AppColors.textPrimary)
-        : (iconColor ?? AppColors.textPrimary);
 
     return Material(
       color: Colors.transparent,
@@ -59,10 +56,10 @@ class CameraIconButton extends StatelessWidget {
             ),
           ),
           child: Center(
-            child: AppIcon(
+            child: AppIcon.data(
               icon,
-              size: currentIconSize,
-              color: currentIconColor,
+              size: 28,
+              color: AppColors.textPrimary,
             ),
           ),
         ),
