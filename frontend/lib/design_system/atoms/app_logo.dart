@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/core/theme/app_images.dart';
+import 'package:frontend/core/resources/app_images.dart';
 
 class AppLogo extends StatelessWidget {
   final double? width;

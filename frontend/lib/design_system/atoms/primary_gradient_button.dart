@@ -1,80 +1,77 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/core/theme/app_radius.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_gradients.dart';
+import 'package:frontend/core/theme/app_radius.dart';
 import 'package:frontend/core/theme/app_sizes.dart';
+import 'package:frontend/core/theme/app_text_styles.dart';
 
-enum AppButtonVariant {
-  primaryLogin,
-  googleLogin,
+enum PrimaryGradientButtonVariant {
+  filled,
+  gradient,
 }
 
-class AppButton extends StatelessWidget {
+class PrimaryGradientButton extends StatelessWidget {
+  const PrimaryGradientButton.filled({
+    super.key,
+    required this.text,
+    required this.onPressed,
+    this.isFullWidth = true,
+  }) : variant = PrimaryGradientButtonVariant.filled;
+
+  const PrimaryGradientButton.gradient({
+    super.key,
+    required this.text,
+    required this.onPressed,
+    this.isFullWidth = true,
+  }) : variant = PrimaryGradientButtonVariant.gradient;
+
   final String text;
   final VoidCallback? onPressed;
   final bool isFullWidth;
-  final AppButtonVariant variant;
+  final PrimaryGradientButtonVariant variant;
 
-  const AppButton.primaryLogin({
-    super.key,
-    required this.text,
-    required this.onPressed,
-    this.isFullWidth = true,
-  }) : variant = AppButtonVariant.primaryLogin;
-
-  const AppButton.googleLogin({
-    super.key,
-    required this.text,
-    required this.onPressed,
-    this.isFullWidth = true,
-  }) : variant = AppButtonVariant.googleLogin;
+  bool get _isGradient => variant == PrimaryGradientButtonVariant.gradient;
 
   @override
   Widget build(BuildContext context) {
-    final isGoogle = variant ==AppButtonVariant.googleLogin;
+    final borderRadius = BorderRadius.circular(AppRadius.md);
 
     return SizedBox(
       width: isFullWidth ? double.infinity : null,
-      child: Container(
-        height: AppSizes.buttonHeightMd,
+      height: AppSizes.buttonHeightMd,
+      child: DecoratedBox(
         decoration: ShapeDecoration(
-          color: isGoogle ? null : AppColors.softUi,
-          gradient: isGoogle ? AppGradients.googleButton : null,
+          color: _isGradient ? null : AppColors.softUi,
+          gradient: _isGradient ? AppGradients.googleButton : null,
           shape: RoundedRectangleBorder(
             side: const BorderSide(
               width: 1,
               color: AppColors.borderPrimary,
             ),
-            borderRadius: BorderRadius.circular(AppRadius.md),
+            borderRadius: borderRadius,
           ),
           shadows: const [
             BoxShadow(
               color: AppColors.shadow,
               blurRadius: 4,
               offset: Offset(0, 4),
-              spreadRadius: 0,
             ),
           ],
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(AppRadius.md),
+            borderRadius: borderRadius,
             onTap: onPressed,
             child: Center(
               child: Text(
                 text,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 20,
-                  fontFamily: 'Plus Jakarta Sans',
-                  fontWeight: FontWeight.w600,
+                style: AppTextStyles.buttonPrimary,
                 ),
               ),
             ),
           ),
         ),
-      ),
     );
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/core/theme/app_icons.dart';
+import 'package:frontend/core/resources/app_icons.dart';
 import '../atoms/app_icon.dart';
 
 class AppBottomNav extends StatelessWidget {
@@ -73,7 +73,7 @@ class AppBottomNav extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppIcon(
+            AppIcon.data(
               icon,
               size: 24,
               color: color,

@@ -1,0 +1,105 @@
+import 'package:flutter/material.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_radius.dart';
+import 'package:frontend/design_system/atoms/app_icon.dart';
+import 'package:frontend/core/resources/app_icons.dart';
+
+enum MediaThumbSize {
+  small,
+  medium,
+  large,
+}
+
+class MediaThumb extends StatelessWidget {
+  const MediaThumb.network({
+    super.key,
+    required this.imageUrl,
+    this.size = MediaThumbSize.small,
+    this.isSelected = false,
+  }) : imagePath = null;
+  
+  const MediaThumb.asset({
+  super.key,
+  required this.imagePath,
+  this.size = MediaThumbSize.small,
+  this.isSelected = false,
+}) : imageUrl = null;
+  
+  final String? imagePath;
+  final String? imageUrl;
+  final MediaThumbSize size;
+  final bool isSelected;
+
+  double get _dimension {
+    switch (size) {
+      case MediaThumbSize.small:
+        return 48;
+      case MediaThumbSize.medium:
+        return 72;
+      case MediaThumbSize.large:
+        return 128;
+    }
+  }
+
+  double get _borderRadius {
+    switch (size) {
+      case MediaThumbSize.small:
+        return AppRadius.sm;
+      case MediaThumbSize.medium:
+        return AppRadius.md;
+      case MediaThumbSize.large:
+        return AppRadius.lg;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: _dimension,
+      height: _dimension,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(_borderRadius),
+        border: Border.all(
+          color: isSelected ? AppColors.textPrimary : AppColors.borderPrimary,
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(_borderRadius - 2),
+        child: _buildImage(),
+      ),
+    );
+  }
+
+      Widget _buildImage() {
+        if (imageUrl != null) {
+          return Image.network(
+            imageUrl!,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => _fallback(),
+          );
+        }
+
+        if (imagePath != null) {
+          return Image.asset(
+            imagePath!,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => _fallback(),
+          );
+        }
+
+        return _fallback();
+      }
+
+      Widget _fallback() {
+        return Container(
+          color: AppColors.softUi,
+          alignment: Alignment.center,
+          child: AppIcon.data(
+            AppIcons.imageSearch,
+            size: 20,
+            color: AppColors.textPrimary,
+          ),
+        );
+      }
+    }
