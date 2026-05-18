@@ -6,17 +6,26 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../services/token_service.dart';
 
-//enkel modell för att hålla reda på bildens URL och vilken fågelart (mapp) den tillhör
+// --- Design System Importer ---
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_spacing.dart';
+import '../design_system/atoms/app_text.dart';
+import '../design_system/molecules/collection_card.dart';
+import '../design_system/atoms/camera_icon_button.dart';
+import 'folder_details_screen.dart';
+
+// Enkel modell för att hålla reda på bildens URL och vilken fågelart (mapp) den tillhör
 class BirdPhoto {
+  final String id;
   final String imageUrl;
   final String birdSpecies;
 
-  BirdPhoto({required this.imageUrl, required this.birdSpecies});
+  BirdPhoto({required this.id, required this.imageUrl, required this.birdSpecies});
 
   factory BirdPhoto.fromJson(Map<String, dynamic> json) {
     return BirdPhoto(
+      id: json['id'] ?? '',
       imageUrl: json['imageUrl'] ?? '',
-      // Backend returnerar 'folderName', inte 'birdSpecies'
       birdSpecies: json['folderName'] ?? 'Oidentifierade',
     );
   }
@@ -30,22 +39,18 @@ class GalleryScreen extends StatefulWidget {
 }
 
 class _GalleryScreenState extends State<GalleryScreen> {
-  // Istället för 'File', sparar nu 'BirdPhoto' objekt som hämtas från databasen
   List<BirdPhoto> _photos = [];
   bool _isLoading = true;
-
   final ImagePicker _picker = ImagePicker();
-
-  // URL till photo-service via API Gateway
   final String _baseUrl = 'http://localhost:8080/gateway/photos';
 
   @override
   void initState() {
     super.initState();
-    _fetchPhotos(); // Ladda bilderna direkt när skärmen öppnas
+    _fetchPhotos();
   }
 
-  // HÄMTA ALLA BILDER FRÅN BACKEND ---
+  // --- NÄTVERKSANROP (Samma som innan) ---
   Future<void> _fetchPhotos() async {
     setState(() => _isLoading = true);
     try {
@@ -73,9 +78,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
     }
   }
 
-  // LADDA UPP EN BILD TILL BACKEND ---
-
-  // ÄNDRING: Parametern är nu XFile imageFile
   Future<void> _uploadPhoto(XFile imageFile, String species) async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Laddar upp bild...')),
@@ -88,27 +90,15 @@ class _GalleryScreenState extends State<GalleryScreen> {
 
       var uploadRequest = http.MultipartRequest('POST', Uri.parse('$_baseUrl/upload'));
       uploadRequest.headers['Authorization'] = 'Bearer $token';
-
       uploadRequest.fields['sessionId'] = sessionId;
       uploadRequest.fields['date'] = currentDate;
 
-      // ---- MAGIN FÖR ATT LÖSA FELMEDDELANDET ----
       if (kIsWeb) {
-        // På webben läser vi bilden som bytes direkt i webbläsaren
         final bytes = await imageFile.readAsBytes();
-        uploadRequest.files.add(http.MultipartFile.fromBytes(
-          'file',
-          bytes,
-          filename: imageFile.name,
-        ));
+        uploadRequest.files.add(http.MultipartFile.fromBytes('file', bytes, filename: imageFile.name));
       } else {
-        // På mobil/Mac kan vi fortfarande använda den snabbare fromPath (dart:io)
-        uploadRequest.files.add(await http.MultipartFile.fromPath(
-          'file',
-          imageFile.path,
-        ));
+        uploadRequest.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
       }
-      // -------------------------------------------
 
       var streamedResponse = await uploadRequest.send();
 
@@ -120,9 +110,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
 
         if (saveResponse.statusCode == 200) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Bild sparad i ditt galleri!')),
-            );
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bild sparad i ditt galleri!')));
           }
           _fetchPhotos();
         } else {
@@ -133,40 +121,34 @@ class _GalleryScreenState extends State<GalleryScreen> {
       }
     } catch (e) {
       debugPrint("Fel vid uppladdning: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Fel: $e')));
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Fel: $e')));
     }
   }
 
-  // DIALOG FÖR ATT ANGE FÅGELART (MAPP) ---
-  // Denna popup visas direkt efter att man valt en bild
-  // ÄNDRING: Parametern är nu XFile imageFile
   Future<void> _askForSpeciesAndUpload(XFile imageFile) async {
     String species = '';
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
+        // Här kan vi också snygga till med AppColors!
         return AlertDialog(
-          title: const Text('Vilken fågel är detta?'),
+          backgroundColor: AppColors.surface,
+          title: const AppText.title('Vilken fågel är detta?'),
           content: TextField(
             onChanged: (value) => species = value,
             decoration: const InputDecoration(hintText: "T.ex. Koltrast"),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Avbryt'),
+              child: const AppText.label('Avbryt'),
               onPressed: () => Navigator.of(dialogContext).pop(),
             ),
             TextButton(
-              child: const Text('Spara och Ladda upp'),
+              child: const AppText.label('Spara och Ladda upp', color: AppColors.brandSecondaryDark),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
-                if (species.isNotEmpty) {
-                  // ÄNDRING: Skicka vidare XFile
-                  _uploadPhoto(imageFile, species);
-                }
+                if (species.isNotEmpty) _uploadPhoto(imageFile, species);
               },
             ),
           ],
@@ -175,27 +157,19 @@ class _GalleryScreenState extends State<GalleryScreen> {
     );
   }
 
-  // KNAPP-FUNKTIONER
+  // --- KNAPPAR ---
   Future<void> _pickImageFromGallery() async {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-    if (pickedFile != null && mounted) {
-      // ÄNDRING: Skickar hela XFile-objektet istället för .path
-      _askForSpeciesAndUpload(pickedFile);
-    }
+    if (pickedFile != null && mounted) _askForSpeciesAndUpload(pickedFile);
   }
 
   Future<void> _takePicture() async {
     final XFile? photo = await _picker.pickImage(source: ImageSource.camera, imageQuality: 80);
-    if (photo != null && mounted) {
-      // ÄNDRING: Skickar hela XFile-objektet istället för .path
-      _askForSpeciesAndUpload(photo);
-    }
+    if (photo != null && mounted) _askForSpeciesAndUpload(photo);
   }
 
   @override
   Widget build(BuildContext context) {
-    //GRUPPERA BILDER EFTER FÅGELART FÖR ATT SKAPA "MAPPAR"
-    // Vi bygger en Map där nyckeln är fågelarten, och värdet är en lista med bilder
     Map<String, List<BirdPhoto>> groupedPhotos = {};
     for (var photo in _photos) {
       if (!groupedPhotos.containsKey(photo.birdSpecies)) {
@@ -205,74 +179,69 @@ class _GalleryScreenState extends State<GalleryScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5DC),
+      backgroundColor: AppColors.surface, // Använder designsystemets bakgrundsfärg
       appBar: AppBar(
-        title: const Text('Mitt Fågelgalleri'),
-        backgroundColor: const Color(0xFF2D5A27),
+        title: const AppText.title('Mitt Fågelgalleri'),
+        backgroundColor: AppColors.surface,
+        scrolledUnderElevation: 0, // Förhindrar att appbaren byter färg när man scrollar
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: AppColors.textPrimary))
           : groupedPhotos.isEmpty
-          ? const Center(child: Text('Inga bilder ännu.\nKlicka på + för att lägga till!'))
-          : ListView.builder(
-        padding: const EdgeInsets.all(8),
+          ? const Center(
+        child: AppText.body(
+          'Inga bilder ännu.\nKlicka på + för att lägga till!',
+          textAlign: TextAlign.center,
+        ),
+      )
+          : ListView.separated(
+        padding: const EdgeInsets.all(AppSpacing.lg),
         itemCount: groupedPhotos.keys.length,
+        separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.md),
         itemBuilder: (context, index) {
           String species = groupedPhotos.keys.elementAt(index);
           List<BirdPhoto> photosForSpecies = groupedPhotos[species]!;
 
-          // Skapa en "Mapp" för varje art
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Text(
-                  species, // Fågelartens namn som rubrik (Mappen)
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2D5A27)),
+          // Extrahera URL:er för CollectionCard
+          List<String> urls = photosForSpecies.map((p) => p.imageUrl).toList();
+
+          return CollectionCard(
+            title: species,
+            imagePaths: urls,
+            imageUrls: urls,
+            onViewPressed: () {
+              // Navigera in i mappen!
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => FolderDetailsScreen(
+                    folderName: species,
+                    photos: photosForSpecies,
+                    onRefreshRequired: _fetchPhotos,
+                  ),
                 ),
-              ),
-              SizedBox(
-                height: 120, // Höjd på rullistan för denna fågel
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: photosForSpecies.length,
-                  itemBuilder: (context, photoIndex) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
-                        child: Image.network(
-                          photosForSpecies[photoIndex].imageUrl, // ladda från URL!
-                          width: 120,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const Divider(),
-            ],
+              );
+            },
           );
         },
       ),
-
+      // Ersatt standard-FABs med dina egna CameraIconButtons
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          FloatingActionButton(
-            heroTag: "btn_camera",
+          CameraIconButton(
+            icon: Icons.camera_alt_outlined,
             onPressed: _takePicture,
-            backgroundColor: const Color(0xFF2D5A27),
-            child: const Icon(Icons.camera_alt, color: Colors.white),
+            backgroundColor: AppColors.brandSecondaryDark,
+            iconColor: Colors.white,
+            borderColor: AppColors.brandSecondaryDark,
           ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            heroTag: "btn_gallery",
+          const SizedBox(height: AppSpacing.md),
+          CameraIconButton(
+            icon: Icons.photo_library_outlined,
             onPressed: _pickImageFromGallery,
-            backgroundColor: const Color(0xFF2D5A27),
-            child: const Icon(Icons.photo_library, color: Colors.white),
+            backgroundColor: AppColors.brandSecondaryDark,
+            iconColor: Colors.white,
+            borderColor: AppColors.brandSecondaryDark,
           ),
         ],
       ),
