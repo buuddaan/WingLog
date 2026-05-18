@@ -117,4 +117,19 @@ public class PhotoService {
         birdImageRepository.deleteByIdAndUserId(imageId, userId);
     }
 
+
+    /** Från Axel, döper om mapp efter FolferName **/
+    public void renameFolder(String oldName, String newName, UUID userId) {
+        List<BirdImage> images = birdImageRepository.findByFolderNameAndUserId(oldName, userId);
+        for (BirdImage image : images) {
+            image.setFolderName(newName);
+            birdImageRepository.save(image);
+        }
+    }
+
+    /** Från Axel, Raderar alla bilder i en mapp**/
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteFolder(String folderName, UUID userId) {
+        birdImageRepository.deleteByFolderNameAndUserId(folderName, userId);
+    }
 }
