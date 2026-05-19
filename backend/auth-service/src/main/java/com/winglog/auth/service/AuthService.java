@@ -55,15 +55,19 @@ public class AuthService {
      *
      * @param request innehåller användarens användarnamn och lösenord
      * @return AuthResponse innehållande JWT-token för autentisering
-     * @throws RuntimeException om användanamnet inte finns eller om lösenordet inte matchar
+     * @throws RuntimeException om användanamnet inte finns eller om lösenordet inte matchar, eller om kontot är registrerat via extern provider (GOogle)
      */
     public AuthResponse login(LoginRequest request) {
         Optional<User> user = userRepository.findByUsername(request.getUsername());
         if (user.isEmpty()) {
-            throw new RuntimeException("Användarnamnet hittades inte");
+            throw new RuntimeException("Fel användarnamn eller lösenord");
+        }
+        // Provider-check mellan username-lookup och lösenordskontroll så om kontot inte är "local" får man ej chans att skicka in tomma lösenord (då de står lagrade som NULL i databasen) /EF
+        if (!"local".equals(user.get().getProvider())) {
+            throw new RuntimeException("Logga in med Google istället");
         }
         if (!(passwordEncoder.matches(request.getPassword(), user.get().getPassword()))) {
-            throw new RuntimeException("Fel lösenord");
+            throw new RuntimeException("Fel användarnamn eller lösenord");
         }
         String token = jwtUtil.generateToken(user.get().getEmail(), user.get().getId().toString()); // userId bakas in i JWT för stateless identifiering /EF
         return new AuthResponse(token);

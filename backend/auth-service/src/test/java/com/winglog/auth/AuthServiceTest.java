@@ -76,6 +76,7 @@ public class AuthServiceTest {
         user.setUsername("testUsername");
         user.setEmail("test123@test.com");
         user.setPassword("testPassword");
+        user.setProvider("local"); // lokal användare som autentiseras med lösenord /EF
         user.setId(java.util.UUID.randomUUID());
 
         when(userRepository.findByUsername("testUsername")).thenReturn(Optional.of(user));
@@ -101,12 +102,28 @@ public class AuthServiceTest {
         User user = new User();
         user.setUsername("testUsername");
         user.setPassword("testPassword");
+        user.setProvider("local"); // lokal användare så vi når lösenordskontrollen /EF
 
         when(userRepository.findByUsername("testUsername")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrongPassword", "testPassword")).thenReturn(false);
 
         Assertions.assertThrows(RuntimeException.class, () -> authService.login(request));
+    }
 
+    @Test
+    void loginAsGoogleUserIsRejected() {
+        // Google-användare har provider="google" och password=null i databasen.
+        // Vi ska aldrig nå lösenordskontrollen för dessa - login ska kastas direkt
+        LoginRequest request = new LoginRequest("googleUser", "anyPassword");
+        User user = new User();
+        user.setUsername("googleUser");
+        user.setEmail("google@test.com");
+        user.setProvider("google");
+        // user.setPassword() avsiktligt utelämnat - lösenord är null i databasen för Google-användare /EF
+
+        when(userRepository.findByUsername("googleUser")).thenReturn(Optional.of(user));
+
+        Assertions.assertThrows(RuntimeException.class, () -> authService.login(request));
     }
 
 
