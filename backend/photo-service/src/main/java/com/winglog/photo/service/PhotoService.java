@@ -108,11 +108,12 @@ public class PhotoService {
      * @param sessionId
      * @param userId
      */
+    @org.springframework.transaction.annotation.Transactional
     public void deleteSession(UUID sessionId, UUID userId) {
         birdImageRepository.deleteBySessionIdAndUserId(sessionId, userId);
 
     }
-
+    @org.springframework.transaction.annotation.Transactional
     public void deleteImage(UUID imageId, UUID userId) {
         birdImageRepository.deleteByIdAndUserId(imageId, userId);
     }

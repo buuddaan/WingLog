@@ -10,6 +10,8 @@ import 'package:frontend/services/token_service.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:typed_data';
 
+import '../core/resources/api_config.dart';
+
 class SessionImage {
   final XFile file;
   final String imageId;
@@ -42,8 +44,8 @@ class _CameraScreenState extends State<CameraScreen> {
   bool isLoading = false;
   bool isViewingImage = false;
   final String sessionId = const Uuid().v4();
-  final String _baseUrl = 'http://localhost:8080/gateway';
-
+// I gallery_screen.dart och folder_details_screen.dart
+  final String _baseUrl = ApiConfig.baseUrl;
   @override
   void initState(){
     super.initState();

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../core/resources/api_config.dart';
 import '../services/token_service.dart';
 
 // --- Design System Importer ---
@@ -42,8 +43,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
   List<BirdPhoto> _photos = [];
   bool _isLoading = true;
   final ImagePicker _picker = ImagePicker();
-  final String _baseUrl = 'http://localhost:8080/gateway/photos';
-
+// I gallery_screen.dart och folder_details_screen.dart
+  final String _baseUrl = '${ApiConfig.baseUrl}/photos';
   @override
   void initState() {
     super.initState();
@@ -163,11 +164,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
     if (pickedFile != null && mounted) _askForSpeciesAndUpload(pickedFile);
   }
 
-  Future<void> _takePicture() async {
-    final XFile? photo = await _picker.pickImage(source: ImageSource.camera, imageQuality: 80);
-    if (photo != null && mounted) _askForSpeciesAndUpload(photo);
-  }
-
   @override
   Widget build(BuildContext context) {
     Map<String, List<BirdPhoto>> groupedPhotos = {};
@@ -228,13 +224,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          CameraIconButton(
-            icon: Icons.camera_alt_outlined,
-            onPressed: _takePicture,
-            backgroundColor: AppColors.brandSecondaryDark,
-            iconColor: Colors.white,
-            borderColor: AppColors.brandSecondaryDark,
-          ),
           const SizedBox(height: AppSpacing.md),
           CameraIconButton(
             icon: Icons.photo_library_outlined,
