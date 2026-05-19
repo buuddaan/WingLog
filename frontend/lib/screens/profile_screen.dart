@@ -64,7 +64,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              _username, // Här visas mailen eller namnet!
+              _username, // Här visas mail eller namnet!
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF2D5A27)),
             ),
 

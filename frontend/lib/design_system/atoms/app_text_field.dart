@@ -7,6 +7,7 @@ class AppTextField extends StatelessWidget {
   final bool obscureText;
   final TextEditingController? controller;
   final TextInputType? keyboardType;
+  final FormFieldValidator<String> validator;
 
   const AppTextField({
     required this.label,
@@ -15,6 +16,7 @@ class AppTextField extends StatelessWidget {
     this.obscureText = false,
     this.controller,
     this.keyboardType,
+    required this.validator,
   });
 
   @override
