@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 //import 'package:flutter/cupertino.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/design_system/molecules/animated_mic_button.dart';
 import 'package:frontend/design_system/molecules/section_header.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +36,8 @@ class SoundRecordingScreen extends StatelessWidget{
 
                 const Spacer(),
                 Center(
-                  child: GestureDetector(
+                  child: AnimatedMicButton(
+                    isListening: false,
                     onTap: (){
                         Navigator.push(
                             context,
@@ -44,27 +46,13 @@ class SoundRecordingScreen extends StatelessWidget{
                            ),
                         );
                     },
-                    child: Container(
-                        padding: const EdgeInsets.symmetric(
-                        horizontal: 40,
-                        vertical: 20,
-                        ),
-                     decoration: BoxDecoration(
-                        border: Border.all(
-                            color: Colors.green,
-                            width: 5,
-                        ),
-                        borderRadius: BorderRadius.circular(40),
-                    ),
-                    child: Text('Spela in ljud'),
+                  ),
                 ),
-              ),
-            ),
               const Spacer(),
            ],
           ),
-       ),
-      ),
+         ),
+        ),
       ),
      );
   }
@@ -77,27 +65,13 @@ class ListeningScreen extends StatefulWidget {
   State<ListeningScreen> createState() => _ListeningScreenState();
 }
 
-class _ListeningScreenState extends State<ListeningScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
+class _ListeningScreenState extends State<ListeningScreen> {
   final AudioRecorder _audioRecorder = AudioRecorder();
   String _status = 'Startar inspelning...';
-
 
   @override
   void initState() {
     super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
-
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-
     _startRecordingFlow();
   }
 
@@ -123,9 +97,11 @@ class _ListeningScreenState extends State<ListeningScreen>
             'file',
             response.bodyBytes,
             filename: 'recording.m4a',
-          ));
+          ),
+          );
         } else {
-          request.files.add(await http.MultipartFile.fromPath('file', path));
+          request.files.add(await http.MultipartFile.fromPath('file', path),
+          );
         }
 
         final streamedResponse = await request.send();
@@ -138,9 +114,7 @@ class _ListeningScreenState extends State<ListeningScreen>
 
     if (!mounted) return;
 
-    final navigator = Navigator.of(context);
-
-    navigator.pushReplacement(
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => RecognitionResultScreen(
           recordedFilePath: path,
@@ -149,7 +123,6 @@ class _ListeningScreenState extends State<ListeningScreen>
       ),
     );
   }
-
 
   Future<void> _startRecording() async {
     try {
@@ -205,7 +178,6 @@ class _ListeningScreenState extends State<ListeningScreen>
 
   @override
   void dispose() {
-    _controller.dispose();
     _audioRecorder.dispose();
     super.dispose();
   }
@@ -220,34 +192,26 @@ class _ListeningScreenState extends State<ListeningScreen>
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Column(
                 children: [
-                  SectionHeader(title: _status, //molekyl
-                  centerTitle: true,
-                  trailing: IconButton(onPressed: () {},
-                      icon: const Icon(Icons.settings_outlined),
+                  SectionHeader( //molekyl
+                    title: _status,
+                    centerTitle: true,
+                    trailing: IconButton(onPressed: () {},
+                     icon: const Icon(Icons.settings_outlined),
                   ),
               ),
 
             Expanded(
             child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: const Icon(
-                      Icons.mic,
-                      size: 90,
-                      color: Color(0xFF2D5A27),
-                     ),
+              child: AnimatedMicButton(
+                  isListening: true,
+                  onTap: () {},
                     ),
-                  ],
-                ),
+                 ),
                ),
-            ),
-          ],
+            ],
+           ),
          ),
         ),
-      ),
       ),
     );
   }
