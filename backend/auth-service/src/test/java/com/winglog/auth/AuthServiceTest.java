@@ -70,6 +70,55 @@ public class AuthServiceTest {
     }
 
     @Test
+    void registerFailsWhenEmailIsBlank() {
+        // Tom email ska avvisas innan databasen ens kontaktas /EF
+        RegisterRequest request = new RegisterRequest("", "testUsername", "testPassword");
+
+        Assertions.assertThrows(RuntimeException.class, () -> authService.register(request));
+    }
+
+    @Test
+    void registerFailsWhenEmailHasInvalidFormat() {
+        // Saknar punkt efter @ - ska avvisas av formatkontrollen /EF
+        RegisterRequest request = new RegisterRequest("test@gmail", "testUsername", "testPassword");
+
+        Assertions.assertThrows(RuntimeException.class, () -> authService.register(request));
+    }
+
+    @Test
+    void registerFailsWhenUsernameIsTooShort() {
+        // Under 3 tecken ska avvisas /EF
+        RegisterRequest request = new RegisterRequest("test123@test.com", "ab", "testPassword");
+
+        Assertions.assertThrows(RuntimeException.class, () -> authService.register(request));
+    }
+
+    @Test
+    void registerFailsWhenUsernameContainsInvalidCharacters() {
+        // Mellanslag och specialtecken är inte tillåtna i användarnamn /EF
+        RegisterRequest request = new RegisterRequest("test123@test.com", "kim!nilsson", "testPassword");
+
+        Assertions.assertThrows(RuntimeException.class, () -> authService.register(request));
+    }
+
+    @Test
+    void registerFailsWhenPasswordIsTooShort() {
+        // Under 8 tecken (OWASP-minimum) ska avvisas /EF
+        RegisterRequest request = new RegisterRequest("test123@test.com", "testUsername", "short7c");
+
+        Assertions.assertThrows(RuntimeException.class, () -> authService.register(request));
+    }
+
+    @Test
+    void registerFailsWhenPasswordIsTooLong() {
+        // Över 100 tecken ska avvisas - skydd mot DOS via gigantiska strängar /EF
+        String tooLongPassword = "a".repeat(101);
+        RegisterRequest request = new RegisterRequest("test123@test.com", "testUsername", tooLongPassword);
+
+        Assertions.assertThrows(RuntimeException.class, () -> authService.register(request));
+    }
+
+    @Test
     void loginSuccess() {
         LoginRequest request = new LoginRequest("testUsername", "testPassword");
         User user = new User();

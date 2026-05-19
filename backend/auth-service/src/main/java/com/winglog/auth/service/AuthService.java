@@ -28,11 +28,14 @@ public class AuthService {
      *
      * @param request innehållande den nya användarens email, användarnamn och lösenord
      * @return AuthResponse innehållande JWT-token
-     * @throws RuntimeException om email eller användarnamn redan finns i systemet
+     * @throws RuntimeException om email eller användarnamn redan finns i systemet,
+     *                          eller om någon av fälten inte uppfyller valideringskraven
      */
     public AuthResponse register(RegisterRequest request) {
+        validateRegisterRequest(request); // valideras innan vi gör databasanrop, för att slippa onödig DB-trafik vid tydligt ogiltig input /EF
+
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Emailadressen är redan registrerad");
+            throw new RuntimeException("Email-adressen är redan registrerad");
         }
 
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -48,6 +51,62 @@ public class AuthService {
         user = userRepository.save(user); // Hämtar tillbaka användaren med det DB-genererade UUID:t /EF
         String token = jwtUtil.generateToken(user.getEmail(), user.getId().toString()); // userId bakas in i JWT för stateless identifiering /EF
         return new AuthResponse(token);
+    }
+
+    /**
+     * Validerar fälten i en registreringsförfrågan.
+     * Kontrollerar att email, användarnamn och lösenord finns och uppfyller formatkraven.
+     *
+     * @param request registreringsförfrågan som ska valideras
+     * @throws RuntimeException om någon kontroll misslyckas
+     */
+    private void validateRegisterRequest(RegisterRequest request) {
+        // Email: får inte vara tomt och måste innehålla @ och en punkt efter @ /EF
+        String email = request.getEmail();
+        if (email == null || email.isBlank()) {
+            throw new RuntimeException("Email får inte vara tom");
+        }
+
+        // Kontrollerar så inte mail börjar med @gmail.com tex, utan är riktig mail
+        int atIndex = email.indexOf('@');
+
+        // Kontrollerar så att det finns en punkt efter @, så det inte blir mailaddress@ingenpunkt och att en mail inte slutar på . som hej@gmail.
+        if (atIndex < 1 || email.indexOf('.', atIndex) < 0 || email.endsWith(".")) {
+            throw new RuntimeException("Ogiltig emailadress");
+            // OBS: Kan fortfarande skicka in tex a@a.a som giltig mail, vill vi sätta strängare kontroller här sen också?? /EF
+        }
+
+        // Användarnamn: 3-30 tecken, endast bokstäver/siffror/_/- (skyddar mot konstiga tecken i URL:er och visningar) /EF
+        String username = request.getUsername();
+        if (username == null || username.isBlank()) {
+            throw new RuntimeException("Användarnamn får inte vara tomt");
+        }
+        if (username.length() < 3 || username.length() > 30) {
+            throw new RuntimeException("Användarnamn måste vara mellan 3 och 30 tecken");
+        }
+        for (int i = 0; i < username.length(); i++) {
+            char c = username.charAt(i);
+            boolean isAllowed = (c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9')
+                    || c == '_' || c == '-';
+            if (!isAllowed) {
+                throw new RuntimeException("Användarnamn får endast innehålla bokstäver, siffror, _ och -");
+            }
+        }
+
+        String password = request.getPassword();
+        if (password == null || password.isBlank()) {
+            throw new RuntimeException("Lösenord får inte vara tomt");
+        }
+        // Lösenord: minst 8 tecken enligt OWASP-rekommendation /EF
+        if (password.length() < 8) {
+            throw new RuntimeException("Lösenord måste vara minst 8 tecken");
+        }
+        // Kanske onödigt men max 100 (BCrypt har intern gräns på 72 bytes, max 100 hindrar också DOS via gigantiska strängar) /EF
+        if (password.length() > 100) {
+            throw new RuntimeException("Lösenord får vara max 100 tecken");
+        }
     }
 
     /**
