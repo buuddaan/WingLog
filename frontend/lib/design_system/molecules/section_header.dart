@@ -7,44 +7,94 @@ class SectionHeader extends StatelessWidget {
     super.key,
     required this.title,
     this.subtitle,
+    this.leading,
     this.trailing,
+    this.padding,
+    this.titleStyle,
+    this.subtitleStyle,
+    this.crossAxisAlignment = CrossAxisAlignment.start,
+    this.spacing = AppSpacing.xxs,
+    this.centerTitle = false,
+    this.height = 56,
+    this.sideSlothWidth = 48,
   });
 
   final String title;
   final String? subtitle;
+  final Widget? leading;
   final Widget? trailing;
+  final EdgeInsetsGeometry? padding;
+  final TextStyle? titleStyle;
+  final TextStyle? subtitleStyle;
+  final CrossAxisAlignment crossAxisAlignment;
+  final double spacing;
+  final bool centerTitle;
+  final double height;
+  final double sideSlothWidth;
+
+  bool get _hasSubtitle => subtitle != null && subtitle!.trim().isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: subtitle != null
-          ? CrossAxisAlignment.start
-          : CrossAxisAlignment.center,
+    final Widget titleBlock = Column(
+      crossAxisAlignment:
+      centerTitle ? CrossAxisAlignment.center : crossAxisAlignment,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                style: AppTextStyles.header3,
-              ),
-              if (subtitle != null) ...[
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  subtitle!,
-                  style: AppTextStyles.body,
-                ),
-              ],
-            ],
-          ),
+        Text(
+          title,
+          textAlign: centerTitle ? TextAlign.center : TextAlign.start,
+          style: titleStyle ?? AppTextStyles.header3,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        if (trailing != null) ...[
-          const SizedBox(width: AppSpacing.sm),
-          trailing!,
+        if (_hasSubtitle) ...[
+          SizedBox(height: spacing),
+          Text(
+            subtitle!,
+            textAlign: centerTitle ? TextAlign.center : TextAlign.start,
+            style: subtitleStyle ?? AppTextStyles.body,
+          ),
         ],
       ],
     );
+
+    final content = SizedBox(
+      height: height,
+      child: Row(
+        children: [
+          SizedBox(
+            width: sideSlothWidth,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: leading,
+            ),
+          ),
+        Expanded(
+            child: centerTitle ? Center(
+            child: titleBlock) : Align(
+              alignment: Alignment.centerLeft,
+              child: titleBlock,
+            ),
+        ),
+
+       SizedBox(
+         width: sideSlothWidth,
+         child: Align(
+           alignment: Alignment.centerRight,
+           child: trailing,
+         ),
+       ),
+      ],
+      ),
+    );
+
+    if (padding != null) {
+      return Padding(
+          padding: padding!,
+          child: content,
+      );
+    }
+    return content;
   }
 }

@@ -1,12 +1,15 @@
 import 'dart:io';
 import 'dart:convert';
 //import 'package:flutter/cupertino.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/design_system/molecules/section_header.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:record/record.dart';
 import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:http/http.dart' as http;
+import 'package:frontend/design_system/atoms/app_gradient_background.dart';
 
 class SoundRecordingScreen extends StatelessWidget{
     const SoundRecordingScreen ({super.key});
@@ -14,8 +17,25 @@ class SoundRecordingScreen extends StatelessWidget{
     @override
     Widget build (BuildContext context) {
         return Scaffold(
-            body: Center(
-                child: GestureDetector(
+          backgroundColor: Colors.transparent,
+            body: AppGradientBackground( //här har vi molekyl app_gradient_background
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SectionHeader(title: "Spela in ljud", //här har vi molekylen section_header
+                      centerTitle: true,
+                      trailing: IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.settings_outlined),
+                  ),
+                ),
+
+                const Spacer(),
+                Center(
+                  child: GestureDetector(
                     onTap: (){
                         Navigator.push(
                             context,
@@ -40,11 +60,17 @@ class SoundRecordingScreen extends StatelessWidget{
                 ),
               ),
             ),
+              const Spacer(),
+           ],
+          ),
+       ),
+      ),
+      ),
+     );
+  }
+}
 
-         );
-} }
-
-   class ListeningScreen extends StatefulWidget {
+class ListeningScreen extends StatefulWidget {
   const ListeningScreen({super.key});
 
   @override
@@ -157,7 +183,7 @@ class _ListeningScreenState extends State<ListeningScreen>
       );
 
       setState(() {
-        _status = 'Lyssnar...';
+      _status = 'Lyssnar...';
       });
     } catch (e) {
       setState(() {
@@ -187,31 +213,41 @@ class _ListeningScreenState extends State<ListeningScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Spela in'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              _status,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
+      backgroundColor: Colors.transparent,
+      body: AppGradientBackground( //molekyl
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                children: [
+                  SectionHeader(title: _status, //molekyl
+                  centerTitle: true,
+                  trailing: IconButton(onPressed: () {},
+                      icon: const Icon(Icons.settings_outlined),
+                  ),
               ),
-            ),
-            const SizedBox(height: 24),
-            ScaleTransition(
-              scale: _scaleAnimation,
-              child: const Icon(
-                Icons.mic,
-                size: 90,
-                color: Color(0xFF2D5A27),
-              ),
+
+            Expanded(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: const Icon(
+                      Icons.mic,
+                      size: 90,
+                      color: Color(0xFF2D5A27),
+                     ),
+                    ),
+                  ],
+                ),
+               ),
             ),
           ],
+         ),
         ),
+      ),
       ),
     );
   }
@@ -269,71 +305,96 @@ class _RecognitionResultScreenState extends State<RecognitionResultScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Resultat'),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Ljudigenkänning klar',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-
-              const Icon(
-               Icons.flutter_dash,
-               size: 120,
-               color: Color(0xFF2D5A27),
-              ),
-
-              const SizedBox(height: 16),
-              if (widget.birdResult?['suggestions'] != null) ...[
-                ...(widget.birdResult!['suggestions'] as List).map((s) {
-                  final pct = ((s['confidence'] as num) * 100).toStringAsFixed(1);
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    child: ListTile(
-                      leading: const Icon(Icons.flutter_dash, color: Color(0xFF2D5A27)),
-                      title: Text(
-                        s['birdName'] ?? 'Okänd',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        s['scientificName'] ?? '',
-                        style: const TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                      trailing: Text('$pct%', style: const TextStyle(fontSize: 16)),
+      backgroundColor: Colors.transparent,
+      body: AppGradientBackground(
+          child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  children: [
+                  SectionHeader(
+                    title: 'Resultat',
+                    centerTitle: true,
+                    trailing: IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.settings_outlined),
                     ),
-                  );
-                }),
-              ] else
-                const Text(
-                  'Kunde inte identifiera fågeln.',
-                  textAlign: TextAlign.center,
-                ),
+                  ),
 
-              const SizedBox(height: 20),
-              if (widget.recordedFilePath != null)
-              Text(
-                'Inspelad fil:\n${widget.recordedFilePath}',
-                textAlign: TextAlign.center,
+              Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Padding(
+                   padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                       children: [
+                        const Text(
+                        'Ljudigenkänning klar',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+
+                      const SizedBox(height: 24),
+                      const Icon(
+                       Icons.flutter_dash,
+                       size: 120,
+                       color: Color(0xFF2D5A27),
+                      ),
+
+                      const SizedBox(height: 16),
+                      if (widget.birdResult?['suggestions'] != null) ...[
+                        ...(widget.birdResult!['suggestions'] as List).map((s) {
+                          final pct = ((s['confidence'] as num) * 100).toStringAsFixed(1);
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 6),
+                            child: ListTile(
+                              leading: const Icon(Icons.flutter_dash, color: Color(0xFF2D5A27),
+                              ),
+                              title: Text(
+                                s['birdName'] ?? 'Okänd',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                s['scientificName'] ?? '',
+                                style: const TextStyle(fontStyle: FontStyle.italic),
+                              ),
+                              trailing: Text('$pct%', style: const TextStyle(fontSize: 16),
+                            ),
+                            ),
+                          );
+                        }),
+                      ] else
+                        const Text(
+                          'Kunde inte identifiera fågeln.',
+                          textAlign: TextAlign.center,
+                        ),
+
+                      const SizedBox(height: 20),
+                      if (widget.recordedFilePath != null)
+                      Text(
+                        'Inspelad fil:\n${widget.recordedFilePath}',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox (height: 20),
+                      ElevatedButton(
+                        onPressed: _isPlaying ? _stopPlayback : _playRecording,
+                        child: Text(_isPlaying ? 'Stoppa ljud' : 'Spela upp ljud',
+                      ),
+                    ),
+                  ],
+                 ),
+                ),
+               ),
               ),
-              const SizedBox (height: 20),
-              ElevatedButton(
-                onPressed: _isPlaying ? _stopPlayback : _playRecording,
-                child: Text(_isPlaying ? 'Stoppa ljud' : 'Spela upp ljud'),
-              ),
+            ),
             ],
           ),
         ),
+       ),
       ),
     );
   }
