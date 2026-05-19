@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:http/http.dart' as http;
 
+import '../core/resources/api_config.dart';
+
 class SoundRecordingScreen extends StatelessWidget{
     const SoundRecordingScreen ({super.key});
 
@@ -88,7 +90,8 @@ class _ListeningScreenState extends State<ListeningScreen>
 
     if (path != null) {
       try {
-        final uri = Uri.parse('http://localhost:8087/audio/identify');
+        // Detta skapar: http://DIN-IP:8080/gateway/audio/identify
+        final uri = Uri.parse('${ApiConfig.baseUrl}/audio/identify');
         final request = http.MultipartRequest('POST', uri);
 
         if (kIsWeb) {

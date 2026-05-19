@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart'; // Lade till url_launcher!
+import '../core/resources/api_config.dart';
 import '../services/token_service.dart';
 
 // VI TOG BORT DE VILLKORLIGA IMPORTERNA HÄR UPPE! 🎉
@@ -22,8 +23,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   final _passwordController = TextEditingController();
   final _emailController = TextEditingController();
 
-  final String _baseUrl = 'http://localhost:8080/gateway/auth';
-
+  final String _baseUrl = '${ApiConfig.baseUrl}/auth';
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
