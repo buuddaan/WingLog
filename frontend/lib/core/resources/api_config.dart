@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 class ApiConfig {
   // Byt ut detta mot din dators aktuella IP-adress!
-  static const String _localIpAddress = '192.168.1.100';
+  static const String _localIpAddress = '192.168.1.209';
 
   static String get baseUrl {
     // 1. KÖR VI PÅ WEBBEN?
@@ -22,7 +22,7 @@ class ApiConfig {
     // 3. KÖR VI PÅ EN FYSISK iPHONE (eller Android-telefon)?
     // Fysiska enheter är egna datorer på nätverket och måste peka på din dators IP.
     else {
-      return 'https://$_localIpAddress:8080/gateway';
+      return 'http://$_localIpAddress:8080/gateway';
     }
   }
 }
