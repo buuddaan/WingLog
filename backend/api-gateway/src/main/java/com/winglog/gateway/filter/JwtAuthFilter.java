@@ -51,18 +51,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-
-            if (!jwtUtil.validateToken(token)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Ogiltig eller utgången token");
-                return;
-            }
-
-            request.setAttribute("X-User-Email", jwtUtil.readEmail(token));
-            request.setAttribute("X-User-Id", jwtUtil.readUserId(token));
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Inte behörig");
+            return;
         }
+
+        String token = authHeader.substring(7);
+
+        if (!jwtUtil.validateToken(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Inte behörig");
+            return;
+        }
+
+        request.setAttribute("X-User-Email", jwtUtil.readEmail(token));
+        request.setAttribute("X-User-Id", jwtUtil.readUserId(token));
 
         filterChain.doFilter(request, response);
     }

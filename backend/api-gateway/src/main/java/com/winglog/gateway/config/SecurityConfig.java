@@ -43,8 +43,9 @@ public class SecurityConfig {
                                 "/auth/register",
                                 "/health"
                         ).permitAll()
-                        // .anyRequest().authenticated()
-                        .anyRequest().permitAll()
+
+                        .anyRequest().authenticated()
+
 
                 )
 

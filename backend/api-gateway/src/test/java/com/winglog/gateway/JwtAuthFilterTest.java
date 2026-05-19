@@ -35,7 +35,7 @@ class JwtAuthFilterTest {
 
         filter.doFilter(request, response, filterChain);
         // JwtUtil ska inte ens röras för publika endpoints /EF
-         verifyNoInteractions(jwtUtil);
+        verifyNoInteractions(jwtUtil);
         // Och requesten ska skickas vidare i kedjan
         verify(filterChain, times(1)).doFilter(request, response);
     }
@@ -77,28 +77,27 @@ class JwtAuthFilterTest {
         filter.doFilter(request, response, filterChain);
         // 401 ska sättas och felmeddelandet ska skrivas till bodyn /EF
         assertEquals(401, response.getStatus());
-        assertEquals("Ogiltig eller utgången token", response.getContentAsString());
+        assertEquals("Inte behörig", response.getContentAsString());
         // Kritiskt: kedjan får INTE fortsätta efter 401 /EF
         verify(filterChain, never()).doFilter(any(), any());
         assertNull(request.getAttribute("X-User-Email"));
         assertNull(request.getAttribute("X-User-Id"));
     }
 
-    //TEST Saknad Authorization-header släpps igenom utan attribut
+    //TEST Saknad Authorization-header ger 401 och kedjan stoppas
     @Test
-    void missingAuthHeader_passesThrough_withoutAttributes() throws Exception {
-        // Ingen Authorization-header alls /EF
+    void missingAuthHeader_returns401_andStopsChain() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/gateway/users/me");
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         filter.doFilter(request, response, filterChain);
-        // JwtUtil ska inte anropas, kedjan ska gå vidare, inga attribut ska finnas
-        verifyNoInteractions(jwtUtil);
-        verify(filterChain, times(1)).doFilter(request, response);
+
+        assertEquals(401, response.getStatus());
+        assertEquals("Inte behörig", response.getContentAsString());
+        verify(filterChain, never()).doFilter(any(), any());
         assertNull(request.getAttribute("X-User-Email"));
         assertNull(request.getAttribute("X-User-Id"));
-        assertEquals(200, response.getStatus());
     }
 
     // TEST Authorization-header utan "Bearer "-prefix ignoreras tyst
@@ -112,14 +111,17 @@ class JwtAuthFilterTest {
 
         filter.doFilter(request, response, filterChain);
 
-        // Ingen JWT-validering ska ske, requesten släpps igenom oförändrad
+        // Ingen JWT-validering ska ske, requesten blockeras med 401
+        assertEquals(401, response.getStatus());
+        assertEquals("Inte behörig", response.getContentAsString());
+        verify(filterChain, never()).doFilter(any(), any());
         verifyNoInteractions(jwtUtil);
-        verify(filterChain, times(1)).doFilter(request, response);
         assertNull(request.getAttribute("X-User-Email"));
         assertNull(request.getAttribute("X-User-Id"));
+
     }
 
-// TEST Förinställt X-User-Id attribut rensas när ingen token skickas
+    // TEST Förinställt X-User-Id attribut rensas när ingen token skickas
 // Skyddar mot impersonation om annan kod tidigare i kedjan satt attributet /EF
     @Test
     void preExistingUserIdAttribute_isClearedWhenNoToken() throws Exception {
@@ -133,13 +135,16 @@ class JwtAuthFilterTest {
         filter.doFilter(request, response, filterChain);
 
         // Attributen ska INTE läcka vidare när ingen giltig token validerats /EF
+        assertEquals(401, response.getStatus());
+        assertEquals("Inte behörig", response.getContentAsString());
+        verify(filterChain, never()).doFilter(any(), any());
         assertNull(request.getAttribute("X-User-Id"),
                 "X-User-Id ska rensas när ingen token finns för att förhindra impersonation");
         assertNull(request.getAttribute("X-User-Email"),
                 "X-User-Email ska rensas när ingen token finns för att förhindra impersonation");
     }
 
-// TEST Giltig token skriver över förinställda attribut, inte tvärtom
+    // TEST Giltig token skriver över förinställda attribut, inte tvärtom
 // Säkerställer att tokenen alltid är källan till sanning för identitet /EF
     @Test
     void validJwt_overwritesPreExistingAttributes() throws Exception {
@@ -165,7 +170,7 @@ class JwtAuthFilterTest {
         verify(filterChain, times(1)).doFilter(request, response);
     }
 
-// TEST Klient försöker skicka egen X-User-Id-header för att spoofa identitet
+    // TEST Klient försöker skicka egen X-User-Id-header för att spoofa identitet
 // Verifierar att HTTP-headers från klienten inte automatiskt blir attributes
     @Test
     void clientSuppliedUserIdHeader_isNotPromotedToAttribute() throws Exception {
@@ -179,14 +184,16 @@ class JwtAuthFilterTest {
         filter.doFilter(request, response, filterChain);
 
         // Klientens headers får INTE bli till attributes — bara JwtAuthFilter får sätta dem
+        assertEquals(401, response.getStatus());
+        assertEquals("Inte behörig", response.getContentAsString());
+        verify(filterChain, never()).doFilter(any(), any());
+        verifyNoInteractions(jwtUtil);
         assertNull(request.getAttribute("X-User-Id"),
                 "Klient-skickad X-User-Id-header får inte bli ett attribut");
         assertNull(request.getAttribute("X-User-Email"),
                 "Klient-skickad X-User-Email-header får inte bli ett attribut");
-        verifyNoInteractions(jwtUtil);
-        verify(filterChain, times(1)).doFilter(request, response);
-    }
 
+    }
 
 
 }
