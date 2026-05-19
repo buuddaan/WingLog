@@ -1,9 +1,8 @@
 package com.winglog.auth.controller;
 
-import com.winglog.auth.dto.AuthResponse;
-import com.winglog.auth.dto.LoginRequest;
-import com.winglog.auth.dto.RegisterRequest;
+import com.winglog.auth.dto.*;
 import com.winglog.auth.service.AuthService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,6 +40,19 @@ public class AuthController {
     public AuthResponse login(@RequestBody LoginRequest request) {
         return authService.login(request);
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordRequest request){
+        authService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok("Email skickat!");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetpassword(@RequestBody ResetPasswordRequest request){
+        authService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok("Lösenord återställt");
+    }
+
 
 
 }
