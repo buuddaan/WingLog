@@ -37,7 +37,7 @@ class _MyAppState extends State<MyApp> {
   // kolla om google skickade med token i URL efter redirect
   void _checkGoogleToken() async {
     final uri = Uri.base;
-    final token = uri.queryParameters['token'];
+    final token = Uri.splitQueryString(uri.fragment)['token'];
     if (token != null){
       await TokenService.saveToken(token);
       setState(() => _isLoggedIn = true);

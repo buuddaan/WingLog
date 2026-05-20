@@ -106,7 +106,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
-  // --- HÄR ÄR DEN NYA GOOGLE-INLOGGNINGEN ---
+  // --- HÄR ÄR DEN NYA GOOGLE-INLOGGNINGEN --- // Axel, denna ändras efter API config för att lösa telefon google?
   static const String _googleLoginUrl = 'http://localhost:8080/gateway/oauth2/authorization/google';
 
   Future<void> _handleGoogleSignIn() async {

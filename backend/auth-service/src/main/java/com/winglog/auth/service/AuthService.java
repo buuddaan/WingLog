@@ -8,6 +8,7 @@ import com.winglog.auth.model.User;
 import com.winglog.auth.repository.PasswordResetTokenRepository;
 import com.winglog.auth.repository.UserRepository;
 import com.winglog.shared.util.JwtUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,8 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
     private PasswordResetTokenRepository passwordResetTokenRepository;
     private EmailService emailService;
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     public AuthService(UserRepository userRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, PasswordResetTokenRepository passwordResetTokenRepository, EmailService emailService) {
         this.userRepository = userRepository;
@@ -36,11 +39,14 @@ public class AuthService {
      *
      * @param request innehållande den nya användarens email, användarnamn och lösenord
      * @return AuthResponse innehållande JWT-token
-     * @throws RuntimeException om email eller användarnamn redan finns i systemet
+     * @throws RuntimeException om email eller användarnamn redan finns i systemet,
+     *                          eller om någon av fälten inte uppfyller valideringskraven
      */
     public AuthResponse register(RegisterRequest request) {
+        validateRegisterRequest(request); // valideras innan vi gör databasanrop, för att slippa onödig DB-trafik vid tydligt ogiltig input /EF
+
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Emailadressen är redan registrerad");
+            throw new RuntimeException("Email-adressen är redan registrerad");
         }
 
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -59,19 +65,80 @@ public class AuthService {
     }
 
     /**
-     * loggar in en användare
+     * Validerar fälten i en registreringsförfrågan.
+     * Kontrollerar att email, användarnamn och lösenord finns och uppfyller formatkraven.
+     *
+     * @param request registreringsförfrågan som ska valideras
+     * @throws RuntimeException om någon kontroll misslyckas
+     */
+    private void validateRegisterRequest(RegisterRequest request) {
+        // Email: får inte vara tomt och måste innehålla @ och en punkt efter @ /EF
+        String email = request.getEmail();
+        if (email == null || email.isBlank()) {
+            throw new RuntimeException("Email får inte vara tom");
+        }
+
+        // Kontrollerar så inte mail börjar med @gmail.com tex, utan är riktig mail
+        int atIndex = email.indexOf('@');
+
+        // Kontrollerar så att det finns en punkt efter @, så det inte blir mailaddress@ingenpunkt och att en mail inte slutar på . som hej@gmail.
+        if (atIndex < 1 || email.indexOf('.', atIndex) < 0 || email.endsWith(".")) {
+            throw new RuntimeException("Ogiltig emailadress");
+            // OBS: Kan fortfarande skicka in tex a@a.a som giltig mail, vill vi sätta strängare kontroller här sen också?? /EF
+        }
+
+        // Användarnamn: 3-30 tecken, endast bokstäver/siffror/_/- (skyddar mot konstiga tecken i URL:er och visningar) /EF
+        String username = request.getUsername();
+        if (username == null || username.isBlank()) {
+            throw new RuntimeException("Användarnamn får inte vara tomt");
+        }
+        if (username.length() < 3 || username.length() > 30) {
+            throw new RuntimeException("Användarnamn måste vara mellan 3 och 30 tecken");
+        }
+        for (int i = 0; i < username.length(); i++) {
+            char c = username.charAt(i);
+            boolean isAllowed = (c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9')
+                    || c == '_' || c == '-';
+            if (!isAllowed) {
+                throw new RuntimeException("Användarnamn får endast innehålla bokstäver, siffror, _ och -");
+            }
+        }
+
+        String password = request.getPassword();
+        if (password == null || password.isBlank()) {
+            throw new RuntimeException("Lösenord får inte vara tomt");
+        }
+        // Lösenord: minst 8 tecken enligt OWASP-rekommendation /EF
+        if (password.length() < 8) {
+            throw new RuntimeException("Lösenord måste vara minst 8 tecken");
+        }
+        // Kanske onödigt men max 100 (BCrypt har intern gräns på 72 bytes, max 100 hindrar också DOS via gigantiska strängar) /EF
+        if (password.length() > 100) {
+            throw new RuntimeException("Lösenord får vara max 100 tecken");
+        }
+    }
+
+    /**
+     * Loggar in en användare
      *
      * @param request innehåller användarens användarnamn och lösenord
      * @return AuthResponse innehållande JWT-token för autentisering
-     * @throws RuntimeException om användanamnet inte finns eller om lösenordet inte matchar
+     * @throws RuntimeException om användanamnet inte finns, lösenordet inte matchar,
+     *                          eller om kontot är registrerat via extern provider (Google)
      */
     public AuthResponse login(LoginRequest request) {
         Optional<User> user = userRepository.findByUsername(request.getUsername());
         if (user.isEmpty()) {
-            throw new RuntimeException("Användarnamnet hittades inte");
+            throw new RuntimeException("Fel användarnamn eller lösenord");
+        }
+        // Provider-check mellan username-lookup och lösenordskontroll så om kontot inte är "local" får man ej chans att skicka in tomma lösenord (då de står lagrade som NULL i databasen) /EF
+        if (!"local".equals(user.get().getProvider())) {
+            throw new RuntimeException("Logga in med Google istället");
         }
         if (!(passwordEncoder.matches(request.getPassword(), user.get().getPassword()))) {
-            throw new RuntimeException("Fel lösenord");
+            throw new RuntimeException("Fel användarnamn eller lösenord");
         }
         String token = jwtUtil.generateToken(user.get().getEmail(), user.get().getId().toString()); // userId bakas in i JWT för stateless identifiering /EF
         return new AuthResponse(token);
@@ -86,7 +153,7 @@ public class AuthService {
     public void forgotPassword(String email){
         Optional<User> user = userRepository.findByEmail(email);
         if (user.isEmpty()){
-            throw new RuntimeException("Email finns inte");
+            return;
         }
         passwordResetTokenRepository.deleteByEmail(email);
 
@@ -94,7 +161,7 @@ public class AuthService {
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(15);
         passwordResetTokenRepository.save(new PasswordResetToken(token, email, expiresAt));
 
-        String resetLink = "http://localhost:3000/reset-password?token=" + token;
+        String resetLink = frontendUrl + "/reset-password#token=" + token;
         emailService.sendPassword(email, resetLink);
     }
 
@@ -120,6 +187,4 @@ public class AuthService {
         userRepository.save(user.get());
         passwordResetTokenRepository.deleteByEmail(resetToken.get().getEmail());
     }
-
-
 }
