@@ -8,6 +8,7 @@ import com.winglog.auth.model.User;
 import com.winglog.auth.repository.PasswordResetTokenRepository;
 import com.winglog.auth.repository.UserRepository;
 import com.winglog.shared.util.JwtUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,8 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
     private PasswordResetTokenRepository passwordResetTokenRepository;
     private EmailService emailService;
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     public AuthService(UserRepository userRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, PasswordResetTokenRepository passwordResetTokenRepository, EmailService emailService) {
         this.userRepository = userRepository;
@@ -150,7 +153,7 @@ public class AuthService {
     public void forgotPassword(String email){
         Optional<User> user = userRepository.findByEmail(email);
         if (user.isEmpty()){
-            throw new RuntimeException("Email finns inte");
+            return;
         }
         passwordResetTokenRepository.deleteByEmail(email);
 
@@ -158,7 +161,7 @@ public class AuthService {
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(15);
         passwordResetTokenRepository.save(new PasswordResetToken(token, email, expiresAt));
 
-        String resetLink = "http://localhost:3000/reset-password?token=" + token;
+        String resetLink = frontendUrl + "/reset-password#token=" + token;
         emailService.sendPassword(email, resetLink);
     }
 
