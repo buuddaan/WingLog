@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart'; // Lade till url_launcher!
 import '../core/resources/api_config.dart';
 import '../services/token_service.dart';
+import 'package:frontend/design_system/organisms/login_background.dart';
+import 'package:frontend/design_system/organisms/login_form.dart';
 
 // VI TOG BORT DE VILLKORLIGA IMPORTERNA HÄR UPPE! 🎉
 
@@ -129,100 +131,34 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5DC),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.flutter_dash, size: 80, color: Color(0xFF2D5A27)),
-                const SizedBox(height: 16),
-                Text(
-                  _isLogin ? 'Logga in på WingLog' : 'Skapa WingLog-konto',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF2D5A27)),
-                ),
-                const SizedBox(height: 32),
-                OutlinedButton.icon(
-                  onPressed: _handleGoogleSignIn,
-                  icon: const Icon(Icons.login),
-                  label: const Text('Logga in med Google'),
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
-                ),
-                const SizedBox(height: 16),
-
-                TextFormField(
-                  controller: _usernameController,
-                  decoration: const InputDecoration(labelText: 'Användarnamn', border: OutlineInputBorder()),
-                  validator: (value) => value!.isEmpty ? 'Ange användarnamn' : null,
-                ),
-                const SizedBox(height: 16),
-
-                if (!_isLogin) ...[
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
-                    validator: (value) => value!.isEmpty ? 'Ange email' : null,
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Lösenord', border: OutlineInputBorder()),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Ange lösenord';
-                    }
-                    if (!_isLogin && value.length < 8) {
-                      return 'Minst 8 tecken krävs';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: _submitForm,
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2D5A27)),
-                    child: Text(_isLogin ? 'Logga in' : 'Registrera', style: const TextStyle(color: Colors.white)),
-                  ),
-                ),
-
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _isLogin = !_isLogin;
-                      _formKey.currentState?.reset();
-                    });
-                  },
-                  child: Text(_isLogin ? 'Inget konto? Skapa ett här' : 'Har du redan ett konto? Logga in'),
-                ),
-
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 16),
-
-                TextButton.icon(
-                  onPressed: () {
-                    widget.onLoginSuccess();
-                  },
-                  icon: const Icon(Icons.fast_forward, color: Colors.grey),
-                  label: const Text(
-                    'TILLFÄLLIGT: Skippa inloggning', //låt vara kvar
-                    style: TextStyle(color: Colors.red),
-                  ),
-                ),
-              ],
+      body: Stack(
+        children: [
+          const LoginBackground(),
+          Positioned(
+            top: 90,
+            left: 0,
+            right: 0,
+            child: LoginForm(
+              formKey: _formKey,
+              isLogin: _isLogin,
+              usernameController: _usernameController,
+              emailController: _emailController,
+              passwordController: _passwordController,
+              onSubmit: _submitForm,
+              onGoogleSignIn: _handleGoogleSignIn,
+              onToggleMode: () {
+                setState(() {
+                  _isLogin = !_isLogin;
+                  _formKey.currentState?.reset();
+                  _usernameController.clear();
+                  _emailController.clear();
+                  _passwordController.clear();
+                });
+              },
+              onSkipLogin: widget.onLoginSuccess,
             ),
           ),
-        ),
+        ],
       ),
     );
   }
