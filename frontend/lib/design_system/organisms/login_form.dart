@@ -46,8 +46,8 @@ class LoginForm extends StatelessWidget {
 
           AppTextField(
             controller: usernameController,
-            label: 'E-postadress',
-            hintText: 'namn@email.com',
+            label: 'Användarnamn',
+            hintText: 'Användarnamn',
             validator: (value) =>
                 value == null || value.isEmpty ? 'Ange användarnamn' : null,
           ),
