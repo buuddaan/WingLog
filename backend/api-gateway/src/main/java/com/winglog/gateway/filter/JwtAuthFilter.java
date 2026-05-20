@@ -23,7 +23,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
             "/gateway/auth/login",
             "/gateway/auth/register",
+            "/gateway/auth/forgot-password",
+            "/gateway/auth/reset-password",
             "/gateway/health"
+    );
+
+    private static final List<String> PUBLIC_PREFIXES = List.of(
+            "/gateway/oauth2/",
+            "/gateway/login/oauth2/"
     );
 
     public JwtAuthFilter(JwtUtil jwtUtil) {
@@ -48,6 +55,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // Släpp igenom publika endpoints utan JWT-kontroll /EF
         if (PUBLIC_ENDPOINTS.contains(path)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Släpp igenom OAuth2-flödet utan JWT (användaren har ingen token ännu)
+        if (PUBLIC_PREFIXES.stream().anyMatch(path::startsWith)) {
             filterChain.doFilter(request, response);
             return;
         }
