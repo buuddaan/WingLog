@@ -41,11 +41,13 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/login",
                                 "/auth/register",
+                                "/auth/forgot-password",
+                                "/auth/reset-password",
                                 "/health"
                         ).permitAll()
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
 
                         .anyRequest().authenticated()
-
 
                 )
 
