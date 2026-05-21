@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.Mockito.when;
@@ -43,7 +44,7 @@ public class PhotoServiceTest {
     @Test
     void uploadImageSuccess() throws IOException {
         UploadImageRequest uploadImageRequest = new UploadImageRequest(file, UUID.randomUUID(), LocalDateTime.now() );
-        when(storageService.uploadImage(file)).thenReturn("https://fejkimage-url.com");
+        when(storageService.uploadImage(file)).thenReturn(new String[]{"https://fejkimage-url.com", "fejkPublicId"});
 
         UUID userId = UUID.randomUUID();
         ImageResponse result =  photoService.uploadImage(uploadImageRequest, userId);
@@ -56,8 +57,8 @@ public class PhotoServiceTest {
         UUID sessionId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         List<BirdImage> Images = new ArrayList<>();
-        Images.add(new BirdImage(userId, "https://fejkimage-url.com", null, sessionId, LocalDateTime.now()));
-        Images.add(new BirdImage(userId, "https://halla-url.com", null, sessionId, LocalDateTime.now()));
+        Images.add(new BirdImage(userId, "FejkId",  "https://fejkimage-url.com", null, sessionId, LocalDateTime.now()));
+        Images.add(new BirdImage(userId, "FejkId2", "https://halla-url.com", null, sessionId, LocalDateTime.now()));
 
         when(birdImageRepository.findBySessionIdAndUserId(sessionId, userId)).thenReturn(Images);
 
@@ -76,10 +77,10 @@ public class PhotoServiceTest {
         UUID sessionId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         List<BirdImage> existingImages = new ArrayList<>();
-        existingImages.add(new BirdImage(userId, "https://fejkimage-url.com", "Oidentifierade", sessionId, LocalDateTime.now()));
+        existingImages.add(new BirdImage(userId, "FejkId", "https://fejkimage-url.com", "Oidentifierade", sessionId, LocalDateTime.now()));
 
         List<BirdImage> sessionImages = new ArrayList<>();
-        sessionImages.add(new BirdImage(userId, "https://halla-url.com", null, sessionId, LocalDateTime.now()));
+        sessionImages.add(new BirdImage(userId, "FejkId2", "https://halla-url.com", null, sessionId, LocalDateTime.now()));
 
         when(birdImageRepository.findByUserIdAndFolderNameStartingWith(userId, "Oidentifierade")).thenReturn(existingImages);
         when(birdImageRepository.findBySessionIdAndUserId(sessionId, userId)).thenReturn(sessionImages);
@@ -98,5 +99,17 @@ public class PhotoServiceTest {
 
         photoService.deleteSession(sessionId, userId);
         Mockito.verify(birdImageRepository).deleteBySessionIdAndUserId(sessionId, userId);
+    }
+
+    @Test
+    void deleteImageSuccess () throws  IOException{
+        UUID imageID = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID sessionId = UUID.randomUUID();
+
+        BirdImage birdImage = new BirdImage(userId, "FejkId", "https://fejkimage-url.com", null, sessionId, LocalDateTime.now());
+        when(birdImageRepository.findById(imageID)).thenReturn(Optional.of(birdImage));
+        photoService.deleteImage(imageID, userId);
+        Mockito.verify(storageService).deleteImage("FejkId");
     }
 }

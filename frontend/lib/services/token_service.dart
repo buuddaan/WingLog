@@ -1,23 +1,32 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TokenService {
-  static const String tokenKey = 'jwt_token';
+  static const String _tokenKey = 'jwt_token';
+  static const String _rememberMeKey = 'remember_me';
 
-  //spara token efter inlogg
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(tokenKey, token);
+    await prefs.setString(_tokenKey, token);
   }
 
-  //hämta token vid API anrop
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(tokenKey);
+    return prefs.getString(_tokenKey);
   }
 
-  //radera token vid utloggning
   static Future<void> deleteToken() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(tokenKey);
+    await prefs.remove(_tokenKey);
+    await prefs.remove(_rememberMeKey);
+  }
+
+  static Future<void> saveRememberMe(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_rememberMeKey, value);
+  }
+
+  static Future<bool> getRememberMe() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_rememberMeKey) ?? false;
   }
 }

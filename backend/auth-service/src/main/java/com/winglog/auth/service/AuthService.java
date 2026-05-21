@@ -140,7 +140,7 @@ public class AuthService {
         if (!(passwordEncoder.matches(request.getPassword(), user.get().getPassword()))) {
             throw new RuntimeException("Fel användarnamn eller lösenord");
         }
-        String token = jwtUtil.generateToken(user.get().getEmail(), user.get().getId().toString()); // userId bakas in i JWT för stateless identifiering /EF
+        String token = jwtUtil.generateToken(user.get().getEmail(), user.get().getId().toString(), request.isRememberMe());
         return new AuthResponse(token);
     }
 

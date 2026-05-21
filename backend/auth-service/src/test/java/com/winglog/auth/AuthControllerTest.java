@@ -39,7 +39,7 @@ public class AuthControllerTest {
     @Test
     void loginSuccess(){
 
-        LoginRequest request = new LoginRequest("testUsername", "testPassword");
+        LoginRequest request = new LoginRequest("testUsername", "testPassword", false);
 
         when(authService.login(request)).thenReturn(new AuthResponse("FejkToken"));
 
