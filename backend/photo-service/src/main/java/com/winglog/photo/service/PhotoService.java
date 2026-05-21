@@ -135,7 +135,12 @@ public class PhotoService {
 
     /** Från Axel, Raderar alla bilder i en mapp**/
     @org.springframework.transaction.annotation.Transactional
-    public void deleteFolder(String folderName, UUID userId) {
+    public void deleteFolder(String folderName, UUID userId) throws IOException {
+        List<BirdImage> images = birdImageRepository.findByFolderNameAndUserId(folderName, userId);
+        for (BirdImage image: images){
+            storageService.deleteImage(image.getPublicId());
+        }
+
         birdImageRepository.deleteByFolderNameAndUserId(folderName, userId);
     }
 }
