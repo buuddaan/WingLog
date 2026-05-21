@@ -60,6 +60,7 @@ public class RoutingController {
         // NYTT: Hämta query-parametrar (allt efter ?)
         String queryString = request.getQueryString();
 
+        // Tar fram targetUrl och anropar den
         String targetUrl = resolveTargetUrl(path);
 
         if (targetUrl == null) {
@@ -83,6 +84,9 @@ public class RoutingController {
                 .method(HttpMethod.valueOf(method))
                 .uri(java.net.URI.create(targetUrl));
 
+
+
+        // DETTA ÄR VALIDERINGEN
         // Axel,  Hitta rätt Content-Type istället för att hårdkoda JSON
         if (contentType != null) {
             requestSpec.header("Content-Type", contentType);
@@ -106,6 +110,9 @@ public class RoutingController {
         }
 
         // Returnera byte[] istället för String
+
+        // OBS: Nu kallar gateway på auth, auth anropar microservice. Detta är inte korrekt
+        // Auth ska istället för att anropa ms bara bekräfta autenisering eller ej tillbaka till gateway som efter detta anropar korrekt service
         return requestSpec.retrieve().toEntity(byte[].class);
     }
 

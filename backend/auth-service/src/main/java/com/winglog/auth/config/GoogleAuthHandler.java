@@ -19,6 +19,8 @@ import java.util.Optional;
 public class GoogleAuthHandler implements AuthenticationSuccessHandler {
     private UserRepository userRepository;
     private JwtUtil jwtUtil;
+
+    // Var sätts denna?
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
@@ -55,7 +57,12 @@ public class GoogleAuthHandler implements AuthenticationSuccessHandler {
 
         String token = jwtUtil.generateToken(email, authUser.get().getId().toString());
         //response.sendRedirect("http://localhost:8080?token=" + token);
+       // när denna var aktiv funkade det: localhost:3000/?token=
         response.sendRedirect(frontendUrl + "/#token=" + token);
+        // När vi går till denna länken är det enda vi skickar frontend url:en, servern tar bort det
+
+        // Kan lägga en return här istället så när gatewayen anoroar denna så returneras url som gateway kan köra?
+        // Frontend läser ej fragment, därav funkar denna inte och # når ej server. Måste vara ? istället
 
     }
 }
