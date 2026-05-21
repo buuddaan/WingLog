@@ -43,6 +43,7 @@ public class SecurityConfig {
                                 "/auth/register",
                                 "/auth/forgot-password",
                                 "/auth/reset-password",
+                                "/auth/exchange",
                                 "/health"
                         ).permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
