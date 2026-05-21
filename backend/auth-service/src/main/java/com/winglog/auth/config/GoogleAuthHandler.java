@@ -1,17 +1,3 @@
-/**
- * BESKRIVNING AV KLASSEN:
- * In-memory cache för engångskoder i OAuth2 Authorization Code-flödet /EF
- *
- * Syfte: JWT ska inte synas i URL efter Google-inloggning. Istället sparas
- * JWT här med en slumpad UUID som nyckel. Frontend får UUID-koden i URL,
- * POSTar den till /auth/exchange, och får tillbaka JWT i response body.
- *
- * - store(jwt): sparar JWT, returnerar UUID-kod
- * - consume(code): hämtar JWT och raderar entry (engångsanvändning)
- * - Entries går ut efter 30 sekunder
- * - ConcurrentHashMap för trådsäkerhet vid samtidiga inloggningar
- */
-
 package com.winglog.auth.config;
 
 import com.winglog.auth.model.User;

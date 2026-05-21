@@ -36,34 +36,46 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _checkGoogleToken();
+    _checkExistingSession();
   }
 
-// Kolla om vi kom tillbaka från Google-inloggning med engångskod, lös in mot JWT /EF
-void _checkGoogleToken() async {
-  final uri = Uri.base;
-  final code = uri.queryParameters['code'];
-  if (code == null) return;
+  // Kolla först om vi kom tillbaka från Google-inloggning med engångskod
+  // Annars: kolla om "kom ihåg mig" är aktivt och en sparad token finns
+  void _checkExistingSession() async {
+    // 1. Kom vi tillbaka från Google-inloggning med en engångskod? /EF
+    final uri = Uri.base;
+    final code = uri.queryParameters['code'];
+    if (code != null) {
+      try {
+        final response = await http.post(
+          Uri.parse('${ApiConfig.baseUrl}/auth/exchange'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'code': code}),
+        );
 
-  try {
-    final response = await http.post(
-      Uri.parse('${ApiConfig.baseUrl}/auth/exchange'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'code': code}),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      final token = data['token'] as String;
-      await TokenService.saveToken(token);
-      setState(() => _isLoggedIn = true);
-    } else {
-      debugPrint('Token exchange misslyckades: ${response.statusCode}');
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body) as Map<String, dynamic>;
+          final token = data['token'] as String;
+          await TokenService.saveToken(token);
+          setState(() => _isLoggedIn = true);
+          return;
+        } else {
+          debugPrint('Token exchange misslyckades: ${response.statusCode}');
+        }
+      } catch (e) {
+        debugPrint('Token exchange-fel: $e');
+      }
     }
-  } catch (e) {
-    debugPrint('Token exchange-fel: $e');
+
+    // Annars kolla om den minns! (Info till Emma: All funktionalitet finns sparad som innan för din ändring, bara kombinerad inför merge) /EF
+    final rememberMe = await TokenService.getRememberMe();
+    if (rememberMe) {
+      final savedToken = await TokenService.getToken();
+      if (savedToken != null && savedToken.isNotEmpty) {
+        setState(() => _isLoggedIn = true);
+      }
+    }
   }
-}
 
   // 2. Funktion som anropas från WelcomeScreen vid lyckad inloggning/reg
   void _handleLoginSuccess() {
