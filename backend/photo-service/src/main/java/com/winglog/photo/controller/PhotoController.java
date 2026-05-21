@@ -85,7 +85,7 @@ public class PhotoController {
     @DeleteMapping("/delete-image")
     public ResponseEntity<Void> deleteImage(
             HttpServletRequest request,
-            @RequestParam("imageId") UUID imageId) {
+            @RequestParam("imageId") UUID imageId) throws  IOException{
 
         UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
         photoService.deleteImage(imageId, userId);
