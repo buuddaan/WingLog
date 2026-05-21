@@ -25,6 +25,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             "/gateway/auth/register",
             "/gateway/auth/forgot-password",
             "/gateway/auth/reset-password",
+            "/gateway/auth/exchange",
             "/gateway/health"
     );
 
