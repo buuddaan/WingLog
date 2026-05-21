@@ -2,13 +2,13 @@ package com.winglog.auth.controller;
 
 import com.winglog.auth.dto.*;
 import com.winglog.auth.service.AuthService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-@RestController //berättar för spring att detta tar emot HTTP anrop svaren ska skickas tillbacka som JSON
+
+
+@RestController
 @RequestMapping("/auth")
 public class AuthController {
     private AuthService authService;
@@ -53,6 +53,8 @@ public class AuthController {
         return ResponseEntity.ok("Lösenord återställt");
     }
 
-
-
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleException(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    }
 }

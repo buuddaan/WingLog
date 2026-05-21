@@ -31,16 +31,24 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _checkGoogleToken();
+    _checkExistingSession();
   }
 
-  // kolla om google skickade med token i URL efter redirect
-  void _checkGoogleToken() async {
+  void _checkExistingSession() async {
     final uri = Uri.base;
-    final token = Uri.splitQueryString(uri.fragment)['token'];
-    if (token != null){
-      await TokenService.saveToken(token);
+    final googleToken = Uri.splitQueryString(uri.fragment)['token'];
+    if (googleToken != null) {
+      await TokenService.saveToken(googleToken);
       setState(() => _isLoggedIn = true);
+      return;
+    }
+
+    final rememberMe = await TokenService.getRememberMe();
+    if (rememberMe) {
+      final savedToken = await TokenService.getToken();
+      if (savedToken != null && savedToken.isNotEmpty) {
+        setState(() => _isLoggedIn = true);
+      }
     }
   }
 

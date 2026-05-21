@@ -40,7 +40,7 @@ public class AuthServiceTest {
         when(userRepository.existsByUsername("testUsername")).thenReturn(false);
         when(passwordEncoder.encode("testPassword")).thenReturn("KrypteratPassword");
         when(userRepository.save(any())).thenAnswer(i -> { User u = i.getArgument(0); u.setId(java.util.UUID.randomUUID()); return u; });
-        when(jwtUtil.generateToken(any(), any())).thenReturn("FejkToken");
+        when(jwtUtil.generateToken(any(), any(), any(Boolean.class))).thenReturn("FejkToken");
         AuthResponse result = authService.register(request);
 
         Assertions.assertNotNull(result);
@@ -71,7 +71,7 @@ public class AuthServiceTest {
 
     @Test
     void loginSuccess() {
-        LoginRequest request = new LoginRequest("testUsername", "testPassword");
+        LoginRequest request = new LoginRequest("testUsername", "testPassword", false);
         User user = new User();
         user.setUsername("testUsername");
         user.setEmail("test123@test.com");
@@ -81,7 +81,7 @@ public class AuthServiceTest {
 
         when(userRepository.findByUsername("testUsername")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("testPassword", "testPassword")).thenReturn(true);
-        when(jwtUtil.generateToken(any(), any())).thenReturn("FejkToken");
+        when(jwtUtil.generateToken(any(), any(), any(Boolean.class))).thenReturn("FejkToken");
         AuthResponse result = authService.login(request);
         Assertions.assertNotNull(result);
         Assertions.assertEquals("FejkToken", result.getToken());
@@ -89,7 +89,7 @@ public class AuthServiceTest {
 
     @Test
     void userNotFound() {
-        LoginRequest request = new LoginRequest("testUsername", "testPassword");
+        LoginRequest request = new LoginRequest("testUsername", "testPassword", false);
 
         when(userRepository.findByUsername("testUsername")).thenReturn(Optional.empty());
 
@@ -98,7 +98,7 @@ public class AuthServiceTest {
 
     @Test
     void wrongPassword() {
-        LoginRequest request = new LoginRequest("testUsername", "wrongPassword");
+        LoginRequest request = new LoginRequest("testUsername", "wrongPassword", false);
         User user = new User();
         user.setUsername("testUsername");
         user.setPassword("testPassword");
@@ -114,7 +114,7 @@ public class AuthServiceTest {
     void loginAsGoogleUserIsRejected() {
         // Google-användare har provider="google" och password=null i databasen.
         // Vi ska aldrig nå lösenordskontrollen för dessa - login ska kastas direkt
-        LoginRequest request = new LoginRequest("googleUser", "anyPassword");
+        LoginRequest request = new LoginRequest("googleUser", "anyPassword", false);
         User user = new User();
         user.setUsername("googleUser");
         user.setEmail("google@test.com");

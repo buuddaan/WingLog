@@ -17,18 +17,23 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long expiration;
 
-    /**
-     * Genererar en JWT-Token som används för autentisering av användare.
-     *
-     * @param email som är kopplad till användaren
-     * @return en unik JWT-Token som är giltig i 24 timmar från att den genereras.
-     */
+    @Value("${jwt.rememberme.expiration:2592000000}")
+    private long rememberMeExpiration;
+
     public String generateToken(String email, String userId) {
+        return buildToken(email, userId, expiration);
+    }
+
+    public String generateToken(String email, String userId, boolean rememberMe) {
+        return buildToken(email, userId, rememberMe ? rememberMeExpiration : expiration);
+    }
+
+    private String buildToken(String email, String userId, long expirationMs) {
         return Jwts.builder()
                 .subject(email)
-                .claim("userId", userId) // userId bakas in i JWT så varje service kan ID användaren utan att fråga databasen (stateless) /EF
+                .claim("userId", userId)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
                 .compact();
     }
