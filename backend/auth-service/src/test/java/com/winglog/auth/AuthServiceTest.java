@@ -40,7 +40,7 @@ public class AuthServiceTest {
         when(userRepository.existsByUsername("testUsername")).thenReturn(false);
         when(passwordEncoder.encode("testPassword")).thenReturn("KrypteratPassword");
         when(userRepository.save(any())).thenAnswer(i -> { User u = i.getArgument(0); u.setId(java.util.UUID.randomUUID()); return u; });
-        when(jwtUtil.generateToken(any(), any(), any(Boolean.class))).thenReturn("FejkToken");
+        when(jwtUtil.generateToken(any(), any())).thenReturn("FejkToken");
         AuthResponse result = authService.register(request);
 
         Assertions.assertNotNull(result);
