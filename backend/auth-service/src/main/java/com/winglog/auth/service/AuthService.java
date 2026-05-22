@@ -8,9 +8,12 @@ import com.winglog.auth.model.User;
 import com.winglog.auth.repository.PasswordResetTokenRepository;
 import com.winglog.auth.repository.UserRepository;
 import com.winglog.shared.util.JwtUtil;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -186,5 +189,17 @@ public class AuthService {
         user.get().setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user.get());
         passwordResetTokenRepository.deleteByEmail(resetToken.get().getEmail());
+    }
+
+    /**
+     * Raderar en användare och dennes återställningtoken baserat på användarens id
+     * @param userId id som tillhör användaren som ska raderas
+     * @throws ResponseStatusException om användaren inte hittas
+     */
+    @Transactional
+    public void deleteUser(UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Användaren hittades inte"));
+        passwordResetTokenRepository.deleteByEmail(user.getEmail());
+        userRepository.deleteById(userId);
     }
 }
