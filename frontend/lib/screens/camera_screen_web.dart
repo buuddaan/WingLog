@@ -397,7 +397,6 @@ class _CameraScreenState extends State<CameraScreen> {
       debugPrint('Fel vid radering av session: $exception');
     }
   }
-
   @override
   Widget build(BuildContext context){
     if (!isCameraReady){
@@ -408,89 +407,87 @@ class _CameraScreenState extends State<CameraScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // 1. BAKGRUND (LIVE-KAMERA): Ligger ALLTID i botten och fryser aldrig
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          // 1. BAKGRUND (LIVE-KAMERA): Ligger ALLTID i botten och fryser aldrig
+          Positioned.fill(
+            child: CameraPreview(controller),
+          ),
+
+          // 1B. VALD BILD OVANPÅ: Ritas ut ovanpå kameran om en bild är klickad
+          if (isViewingImage && selectedIndices.isNotEmpty && sessionImages[selectedIndices.last].bytes != null)
             Positioned.fill(
-              child: CameraPreview(controller),
+              child: Image.memory(
+                sessionImages[selectedIndices.last].bytes!,
+                fit: BoxFit.cover,
+              ),
             ),
 
-            // 1B. VALD BILD OVANPÅ: Ritas ut ovanpå kameran om en bild är klickad
-            if (isViewingImage && selectedIndices.isNotEmpty && sessionImages[selectedIndices.last].bytes != null)
-              Positioned.fill(
-                child: Image.memory(
-                  sessionImages[selectedIndices.last].bytes!,
-                  fit: BoxFit.cover,
-                ),
-              ),
-
-            // 2. TOPP: Lista med tumnaglar (alltid synlig när vi har tagit bilder)
-            if (sessionImages.isNotEmpty)
-              Positioned(
-                top: 12, left: 12, right: 12,
-                child: SizedBox(
-                  height: 72,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: sessionImages.length,
-                    itemBuilder: (context, index) {
-                      return GestureDetector(
-                        onTap: () => _toggleSelection(index),
-                        onLongPress: () => _toggleSelection(index),
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: MediaThumb.memory(
-                            imageBytes: sessionImages[index].bytes!,
-                            isSelected: selectedIndices.contains(index),
-                            size: MediaThumbSize.medium,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-            // 3. MELLAN: De flygande knapparna (syns BARA när vi tittar på en bild)
-            if (isViewingImage && selectedIndices.isNotEmpty)
-              Positioned(
-                bottom: 120, left: 16, right: 16,
-                child: SelectionActionRow(
-                  onBack: () => setState (() {
-                    isViewingImage = false;
-                    selectedIndices.clear(); // Går tillbaka till kameran, som snurrar live bakom!
-                  }),
-                  onDelete: _deleteSelectedImages,
-                  selectedCount: selectedIndices.length,
-                ),
-              ),
-
-            // 4. BOTTENMENY
+          // 2. TOPP: Lista med tumnaglar (alltid synlig när vi har tagit bilder)
+          if (sessionImages.isNotEmpty)
             Positioned(
-              left: 16, right: 16, bottom: 40,
-              child: selectedIndices.isEmpty
-               ? CameraBottomControls(
-                  onGalleryPressed: _toggleFlash,
-                  onShutterPressed: _takePicture,
-                  onSwitchCameraPressed: null,
-                  isCaptureEnabled:  !isTakingPicture,
-                  isLeftActive: isFlashOn,
-                )
-               : CameraFlowBottomBar(
-                  onCancel: _onCancel,
-                  onIdentify: _identifyBird,
-                  onSave: _saveImage,
-                  isIdentifyEnabled: selectedIndices.isNotEmpty,
+              top: 12, left: 12, right: 12,
+              child: SizedBox(
+                height: 72,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: sessionImages.length,
+                  itemBuilder: (context, index) {
+                    return GestureDetector(
+                      onTap: () => _toggleSelection(index),
+                      onLongPress: () => _toggleSelection(index),
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: MediaThumb.memory(
+                          imageBytes: sessionImages[index].bytes!,
+                          isSelected: selectedIndices.contains(index),
+                          size: MediaThumbSize.medium,
+                        ),
+                      ),
+                    );
+                  },
                 ),
+              ),
             ),
 
-            // 5. LADDNING
-            if (isLoading) const LoadingOverlay(),
-          ],
-        ),
+          // 3. MELLAN: De flygande knapparna (syns BARA när vi tittar på en bild)
+          if (isViewingImage && selectedIndices.isNotEmpty)
+            Positioned(
+              bottom: 120, left: 16, right: 16,
+              child: SelectionActionRow(
+                onBack: () => setState (() {
+                  isViewingImage = false;
+                  selectedIndices.clear(); // Går tillbaka till kameran, som snurrar live bakom!
+                }),
+                onDelete: _deleteSelectedImages,
+                selectedCount: selectedIndices.length,
+              ),
+            ),
+
+          // 4. BOTTENMENY
+          Positioned(
+            left: 16, right: 16, bottom: 40,
+            child: selectedIndices.isEmpty
+                ? CameraBottomControls(
+              onGalleryPressed: _toggleFlash,
+              onShutterPressed: _takePicture,
+              onSwitchCameraPressed: null,
+              isCaptureEnabled:  !isTakingPicture,
+              isLeftActive: isFlashOn,
+            )
+                : CameraFlowBottomBar(
+              onCancel: _onCancel,
+              onIdentify: _identifyBird,
+              onSave: _saveImage,
+              isIdentifyEnabled: selectedIndices.isNotEmpty,
+            ),
+          ),
+
+          // 5. LADDNING
+          if (isLoading) const LoadingOverlay(),
+        ],
       ),
-    );
+    ); // <-- HÄR var felet! En extra parentes är nu borttagen.
   }
 }

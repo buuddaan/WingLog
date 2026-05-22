@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.PostConstruct;
+
+import java.io.IOError;
 import java.io.IOException;
 import java.util.Map;
 
@@ -45,10 +47,16 @@ public class StorageService {
      * @return String en HTTPS URL till den uppladdade bilden i cloudinary
      * @throws IOException om et fel uppstår vid läsning av bildfilen
      */
-    public String uploadImage(MultipartFile file) throws IOException {
+    public String[] uploadImage(MultipartFile file) throws IOException {
         byte[] imageBytes = file.getBytes();
         Map uploadResult = cloudinary.uploader().upload(imageBytes, ObjectUtils.emptyMap());
-        return (String) uploadResult.get("secure_url");
+        String imageUrl = (String) uploadResult.get("secure_url");
+        String publicId = (String) uploadResult.get("public_id");
+        return new String[]{imageUrl, publicId};
+    }
+
+    public void deleteImage(String publicId) throws IOException {
+        cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
     }
 
 

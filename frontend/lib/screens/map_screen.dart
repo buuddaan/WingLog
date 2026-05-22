@@ -248,8 +248,8 @@ class _MapScreenState extends State<MapScreen> {
           // Filterchip som visas när artsökning är aktiv
           if (_activeSpeciesFilter != null)
             Positioned(
-              top: 80,
-              left: 20,
+              top: MediaQuery.of(context).padding.top + 190,
+              left: 16,
               child: Chip(
                 backgroundColor: const Color(0xFF2D5A27),
                 label: Text(
@@ -273,7 +273,7 @@ class _MapScreenState extends State<MapScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2D5A27),
+                  color: const Color(0xFF081145),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -281,7 +281,6 @@ class _MapScreenState extends State<MapScreen> {
                   children: [
                     const Text('Tryck på kartan för att placera pin',
                         style: TextStyle(color: Colors.white)),
-                    // Avbryt-knapp som stänger "placera pin"-läget
                     GestureDetector(
                       onTap: () => setState(() { _placingPin = false; _canPlace = false; }),
                       child: const Icon(Icons.close, color: Colors.white),
@@ -291,93 +290,109 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
 
-          // Sökfältet längst upp — animeras mellan komprimerat och aktivt läge
+          // DE TVÅ KNAPPARNA (Sök, Placera Pin) SAMLADE UNDER HAMBURGERMENYN
           Positioned(
-            top: 20,
-            left: 20,
-            right: 20,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.95),
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8)],
-              ),
-              // Visar antingen ett aktivt textfält eller en klickbar platshållare
-              child: _isSearching
-                  ? TextField(
-                      controller: _searchController,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: 'Sök på plats eller fågel...',
-                        border: InputBorder.none,
-                        icon: const Icon(Icons.search, color: Color(0xFF2D5A27)),
-                        // Spinner medan sökning pågår, annars stäng-knapp
-                        suffixIcon: _isLoading
-                            ? const Padding(
-                                padding: EdgeInsets.all(12.0),
+            top: MediaQuery.of(context).padding.top + 9, // Tryckt ner 72px för att ge plats åt Flutters egna menyknapp
+            left: 9,
+            right: 9, // right: 16 gör att sökfältet vet hur brett det får lov att bli när det expanderar
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+
+                // 1. Sökfältet
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  height: 48,
+                  // Om vi söker tar vi upp skärmens bredd (minus marginaler). Annars 48px för en cirkel.
+                  width: _isSearching ? MediaQuery.of(context).size.width - 32 : 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF081145), // Mörk transparent färg
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const NeverScrollableScrollPhysics(),
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width - 32,
+                        height: 48,
+                        child: _isSearching
+                            ? TextField(
+                                controller: _searchController,
+                                autofocus: true,
+                                style: const TextStyle(color: Colors.white), // Vit text när man skriver
+                                decoration: InputDecoration(
+                                  hintText: 'Sök på plats eller fågel...',
+                                  hintStyle: const TextStyle(color: Colors.white70), // Ljusgrå hint-text
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  suffixIcon: _isLoading
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(12.0),
+                                          child: SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.5,
+                                              color: Colors.white, // Vit laddningshjul
+                                            ),
+                                          ),
+                                        )
+                                      : IconButton(
+                                          icon: const Icon(Icons.close, color: Colors.white),
+                                          onPressed: () {
+                                            setState(() {
+                                              _isSearching = false;
+                                              _searchController.clear();
+                                            });
+                                          },
+                                        ),
+                                ),
+                                onSubmitted: _search,
+                              )
+                            : Align(
+                                alignment: Alignment.centerLeft,
                                 child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    color: Color(0xFF2D5A27),
+                                  width: 48,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.search, color: Colors.white),
+                                    onPressed: () {
+                                      setState(() {
+                                        _isSearching = true;
+                                      });
+                                    },
                                   ),
                                 ),
-                              )
-                            : IconButton(
-                                icon: const Icon(Icons.close),
-                                onPressed: () {
-                                  setState(() {
-                                    _isSearching = false;
-                                    _searchController.clear();
-                                  });
-                                },
                               ),
                       ),
-                      onSubmitted: _search,
-                    )
-                  : InkWell(
-                      onTap: () => setState(() => _isSearching = true),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12.0),
-                        child: Row(
-                          children: const [
-                            Icon(Icons.search, color: Color(0xFF2D5A27), size: 20),
-                            SizedBox(width: 10),
-                            Text('Sök på WingLog...',
-                                style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey)),
-                          ],
-                        ),
-                      ),
                     ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // 2. Placera Pin-knapp
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF081145),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.pin_drop_outlined, color: Colors.white),
+                    onPressed: () {
+                      setState(() { _placingPin = true; _canPlace = false; });
+                      Future.delayed(const Duration(milliseconds: 400), () {
+                        if (mounted) setState(() => _canPlace = true);
+                      });
+                    },
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
-      // Två knappar längst ned till höger:
-      // + för att lägga till en observation, GPS för platsfunktion (ej implementerad än)
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton(
-            heroTag: 'add_observation',
-            onPressed: () {
-              setState(() { _placingPin = true; _canPlace = false; });
-              Future.delayed(const Duration(milliseconds: 400), () {
-                if (mounted) setState(() => _canPlace = true);
-              });
-            },
-            backgroundColor: const Color(0xFF2D5A27),
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
-          const SizedBox(height: 12),
-          FloatingActionButton(
-            heroTag: 'gps',
-            onPressed: () => debugPrint('GPS-funktion kommer senare!'),
-            backgroundColor: const Color(0xFF2D5A27),
-            child: const Icon(Icons.my_location, color: Colors.white),
           ),
         ],
       ),
