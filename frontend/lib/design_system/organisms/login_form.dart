@@ -16,6 +16,8 @@ class LoginForm extends StatelessWidget {
     required this.onGoogleSignIn,
     required this.onToggleMode,
     required this.onSkipLogin,
+    required this.rememberMe,
+    required this.onRememberMeChanged,
   });
 
   final GlobalKey<FormState> formKey;
@@ -27,6 +29,8 @@ class LoginForm extends StatelessWidget {
   final VoidCallback onGoogleSignIn;
   final VoidCallback onToggleMode;
   final VoidCallback onSkipLogin;
+  final bool rememberMe;
+  final ValueChanged<bool> onRememberMeChanged;
 
 
   @override
@@ -81,6 +85,28 @@ class LoginForm extends StatelessWidget {
           ),
 
           const SizedBox(height: AppSpacing.md),
+
+          if (isLogin)
+            Row(
+              children: [
+                Checkbox(
+                  value: rememberMe,
+                  onChanged: (val) => onRememberMeChanged(val ?? false),
+                  activeColor: AppColors.brandPrimary,
+                  checkColor: AppColors.textPrimary,
+                  side: const BorderSide(color: AppColors.textPrimary, width: 1.5),
+                ),
+                const Text(
+                  'Kom ihåg mig',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
 
           if (isLogin)
           const Align(

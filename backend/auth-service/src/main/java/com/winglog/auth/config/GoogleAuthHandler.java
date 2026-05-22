@@ -2,6 +2,7 @@ package com.winglog.auth.config;
 
 import com.winglog.auth.model.User;
 import com.winglog.auth.repository.UserRepository;
+import com.winglog.auth.config.TokenExchangeCache;
 import com.winglog.shared.util.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,45 +18,46 @@ import java.util.Optional;
 
 @Component
 public class GoogleAuthHandler implements AuthenticationSuccessHandler {
-    private UserRepository userRepository;
-    private JwtUtil jwtUtil;
+
+    // Lägger dessa som final, ändra tillbaka om ni ej vill ha så /EF
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
+    private final TokenExchangeCache tokenExchangeCache;
+
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
-    public GoogleAuthHandler (UserRepository userRepository, JwtUtil jwtUtil){
+    public GoogleAuthHandler(UserRepository userRepository,
+                             JwtUtil jwtUtil,
+                             TokenExchangeCache tokenExchangeCache) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
+        this.tokenExchangeCache = tokenExchangeCache;
     }
 
-    /**
-     * Hanterar en lyckad Google Auth2-autentisering.
-     * Skapar ny användare om inte användaren redan finns i databasen
-     * En JWT-Token genereras och skickas till frontend
-     * @param request anrop från klient
-     * @param response som används för att skicka svar till frontend
-     * @param authentication som innehåller använddarens information från Google kontot
-     * @throws IOException om fel inträffar när svar skickas till frontend
-     * @throws ServletException om fel med hantering av anrop
-     */
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request,
+                                        HttpServletResponse response,
+                                        Authentication authentication)
+            throws IOException, ServletException {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
-        String username = authentication.getName().replace(" ","");
+        String username = authentication.getName().replace(" ", "");
 
         Optional<User> authUser = userRepository.findByEmail(email);
-        if(authUser.isEmpty()){
-           User user = new User();
-           user.setEmail(email);
-           user.setProvider("google");
-           user.setUsername(username);
-
+        if (authUser.isEmpty()) {
+            User user = new User();
+            user.setEmail(email);
+            user.setProvider("google");
+            user.setUsername(username);
             authUser = Optional.of(userRepository.save(user));
         }
 
         String token = jwtUtil.generateToken(email, authUser.get().getId().toString());
-        //response.sendRedirect("http://localhost:8080?token=" + token);
-        response.sendRedirect(frontendUrl + "/#token=" + token);
 
+        // Lägg JWT i cachen och skicka bara engångskoden till frontend /EF
+        String code = tokenExchangeCache.store(token);
+        // Nu ?code= ist för #token=
+        response.sendRedirect(frontendUrl + "/?code=" + code);
     }
 }

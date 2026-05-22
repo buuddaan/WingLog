@@ -35,9 +35,10 @@ public class PhotoService {
      * @throws IOException om inte bilden kan läsas in
      */
     public ImageResponse uploadImage(UploadImageRequest request, UUID userId) throws IOException {
-        String imageUrl = storageService.uploadImage(request.getImage());
-
-        BirdImage birdImage = new BirdImage(userId, imageUrl, null, request.getSessionId(), request.getDate());
+        String[] uploadResult = storageService.uploadImage(request.getImage());
+        String imageUrl = uploadResult[0];
+        String publicId = uploadResult[1];
+        BirdImage birdImage = new BirdImage(userId, publicId, imageUrl, null, request.getSessionId(), request.getDate());
         birdImageRepository.save(birdImage);
 
         return new ImageResponse(birdImage.getId(), birdImage.getImageUrl(), birdImage.getFolderName(), birdImage.getSessionId(), birdImage.getDate());
@@ -114,7 +115,11 @@ public class PhotoService {
 
     }
     @org.springframework.transaction.annotation.Transactional
-    public void deleteImage(UUID imageId, UUID userId) {
+    public void deleteImage(UUID imageId, UUID userId) throws IOException {
+        BirdImage image = birdImageRepository.findById(imageId)
+                .orElseThrow(() -> new RuntimeException("Bilden hittades inte"));
+
+        storageService.deleteImage(image.getPublicId());
         birdImageRepository.deleteByIdAndUserId(imageId, userId);
     }
 
@@ -130,7 +135,12 @@ public class PhotoService {
 
     /** Från Axel, Raderar alla bilder i en mapp**/
     @org.springframework.transaction.annotation.Transactional
-    public void deleteFolder(String folderName, UUID userId) {
+    public void deleteFolder(String folderName, UUID userId) throws IOException {
+        List<BirdImage> images = birdImageRepository.findByFolderNameAndUserId(folderName, userId);
+        for (BirdImage image: images){
+            storageService.deleteImage(image.getPublicId());
+        }
+
         birdImageRepository.deleteByFolderNameAndUserId(folderName, userId);
     }
 }

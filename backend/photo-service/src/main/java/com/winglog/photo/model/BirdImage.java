@@ -16,6 +16,8 @@ public class BirdImage {
     private UUID id;
     @Column(nullable = false)
     private UUID userId;
+    @Column
+    private String publicId;
     @Column(nullable = false, length = 500)
     private String imageUrl;
     @Column
@@ -29,8 +31,9 @@ public class BirdImage {
 
     }
 
-    public BirdImage(UUID userId, String imageUrl, String folderName, UUID sessionId, LocalDateTime date) {
+    public BirdImage(UUID userId, String publicId , String imageUrl, String folderName, UUID sessionId, LocalDateTime date) {
         this.userId = userId;
+        this.publicId = publicId;
         this.imageUrl = imageUrl;
         this.folderName = folderName;
         this.sessionId = sessionId;
@@ -43,6 +46,10 @@ public class BirdImage {
 
     public UUID getUserId() {
         return userId;
+    }
+
+    public String getPublicId() {
+        return publicId;
     }
 
     public String getImageUrl() {
