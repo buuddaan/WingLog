@@ -85,7 +85,7 @@ public class PhotoController {
     @DeleteMapping("/delete-image")
     public ResponseEntity<Void> deleteImage(
             HttpServletRequest request,
-            @RequestParam("imageId") UUID imageId) {
+            @RequestParam("imageId") UUID imageId) throws  IOException{
 
         UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
         photoService.deleteImage(imageId, userId);
@@ -106,7 +106,7 @@ public class PhotoController {
     @DeleteMapping("/delete-folder")
     public ResponseEntity<Void> deleteFolder(
             HttpServletRequest request,
-            @RequestParam("folderName") String folderName) {
+            @RequestParam("folderName") String folderName) throws IOException{
 
         UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
         photoService.deleteFolder(folderName, userId);

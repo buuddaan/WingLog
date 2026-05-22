@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/login_test_screen.dart';
+import '../core/theme/app_gradients.dart';
 import 'map_screen.dart';
 import 'camera_screen.dart';
 import '../main.dart'; // För 'cameras'-variabeln
@@ -43,16 +44,25 @@ class _MainLayoutState extends State<MainLayout> {
       drawer: SizedBox(
         width: MediaQuery.of(context).size.width * 0.85,
         child: Drawer(
-          backgroundColor: const Color(0xFFF5F5DC),
+          backgroundColor: const Color(0xFFF4FFFD),
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
               const DrawerHeader(
-                decoration: BoxDecoration(color: Color(0xFF2D5A27)),
-                child: Text('WingLog', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                decoration: BoxDecoration(
+                    gradient: AppGradients.loginBackground
+                ),
+                child: Text(
+                  'WingLog',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               ListTile(
-                leading: const Icon(Icons.account_circle, color: Color(0xFF2D5A27)),
+                leading: const Icon(Icons.account_circle, color: Color(0xFF081145)),
                 title: const Text('Min Profil / Inställningar'),
                 onTap: () {
                   Navigator.pop(context); // Stäng menyn
