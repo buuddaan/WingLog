@@ -135,7 +135,7 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  ///Laddar upp en bild till backend via API Gatewayen.
+  ///Laddar upp en bild till backend via API Gateway.
   Future<String?> _uploadImage(XFile image) async {
     try {
       final token = await TokenService.getToken();
@@ -194,7 +194,7 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  ///Identifierar fågelartern på de markerade bilderna via Google Vision API.
+  ///Identifierar fågelart på de markerade bilderna via Google Vision API.
   Future<void> _identifyBird() async {
     if (selectedIndices.isEmpty) return;
 
@@ -262,7 +262,7 @@ class _CameraScreenState extends State<CameraScreen> {
               return Text('${c['species']} - $percent%');
             }),
             const SizedBox(height: 16),
-            const Text('Namnge mappen;'),
+            const Text('Namnge mappen'),
             const SizedBox(height: 8),
             TextField(
               controller: folderController,
@@ -311,7 +311,7 @@ class _CameraScreenState extends State<CameraScreen> {
         });
       }
     } catch (exception) {
-      debugPrint('Fel vid sparning: $exception');
+      debugPrint('Fel vid sparande: $exception');
     }
   }
 
