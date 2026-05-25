@@ -26,10 +26,6 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>WingLog behöver kameran för att du ska kunna fota fåglar direkt i appen.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>WingLog behöver åtkomst till dina bilder för att du ska kunna ladda upp tidigare fågelbilder.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -69,6 +65,23 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
+    </array>
+    <key>NSCameraUsageDescription</key>
+    <string>WingLog behöver tillgång till kameran för att du ska kunna fota fåglar.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>WingLog behöver mikrofonen för att spela in och identifiera fågelläten.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>WingLog behöver din plats för att visa var du befinner dig på kartan.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>WingLog behöver tillgång till dina bilder för att spara dina observationer.</string>
+
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
+
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>WingLog behöver ansluta till din lokala server för att ladda ner och spara observationer.</string>
 </dict>
 </plist>

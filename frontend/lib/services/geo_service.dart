@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../core/resources/api_config.dart';
 import 'token_service.dart'; // För JWT-headern /EF
 
 // Modell som speglar backend SightingResponse /EF
@@ -41,8 +42,7 @@ class Sighting {
 }
 
 class GeoService {
-  static const String _baseUrl = 'http://localhost:8080/gateway';
-
+  final url = Uri.parse('${ApiConfig.baseUrl}/sightings');
   // Bygger headers med JWT-token för autentiserade anrop /EF
   static Future<Map<String, String>> _authHeaders() async {
     final token = await TokenService.getToken();
@@ -57,7 +57,7 @@ class GeoService {
 
   // Hämtar alla sparade observationer — visas som pins på kartan vid start
   static Future<List<Sighting>> getSightings() async {
-    final uri = Uri.parse('$_baseUrl/sightings');
+    final uri = Uri.parse('${ApiConfig.baseUrl}/sightings');
     final response = await http.get(uri, headers: await _authHeaders());
     if (response.statusCode != 200) {
       throw Exception('Get sightings failed: ${response.statusCode}');
@@ -68,7 +68,7 @@ class GeoService {
 
   // Hämtar alla pins för en specifik fågelart /EF
   static Future<List<Sighting>> searchBySpecies(String speciesName) async {
-    final uri = Uri.parse('$_baseUrl/sightings').replace(
+    final uri = Uri.parse('${ApiConfig.baseUrl}/sightings').replace(
       queryParameters: {'species': speciesName},
     );
     final response = await http.get(uri, headers: await _authHeaders());
@@ -81,7 +81,7 @@ class GeoService {
 
   // Tar bort en observation via DELETE /sightings/{id}
   static Future<void> deleteSighting(String id) async {
-    final uri = Uri.parse('$_baseUrl/sightings/$id');
+    final uri = Uri.parse('${ApiConfig.baseUrl}/sightings/$id');
     final response = await http.delete(uri, headers: await _authHeaders());
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('Delete sighting failed: ${response.statusCode}');
@@ -96,7 +96,7 @@ class GeoService {
     String? description,
     bool isPublic = true,
   }) async {
-    final uri = Uri.parse('$_baseUrl/sightings');
+    final uri = Uri.parse('${ApiConfig.baseUrl}/sightings');
     final body = <String, dynamic>{
       'latitude': latitude,
       'longitude': longitude,

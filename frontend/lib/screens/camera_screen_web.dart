@@ -63,7 +63,7 @@ class _CameraScreenState extends State<CameraScreen> {
     //Startar controllern och väljer den första kameran i listan.
     controller = CameraController(
       widget.cameras[0],
-      ResolutionPreset.max,
+      ResolutionPreset.high,
       enableAudio: false,
     );
 

@@ -1,12 +1,14 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  // Byt ut detta mot den PUBLIKA IP-adressen till din SSH-server
-  static const String _serverIp = '123.45.67.89';
+  // Byt ut detta mot din dators aktuella IP-adress!, jag tror att det är denna vi kommer byta till servern sen
+  static const String _localIpAddress = '10.200.47.121';
 
   static String get baseUrl {
     // Webbläsaren (Chrome) körs på datorn och hittar din backend via localhost.
     if (kIsWeb) {
-      return 'http://65.21.190.58:8080/gateway';
+      return 'http://localhost:8080/gateway';
     }
     // Android-emulatorer har en inbyggd spärr och måste använda en special-adress
     // (10.0.2.2) för att hitta värddatorns localhost.
