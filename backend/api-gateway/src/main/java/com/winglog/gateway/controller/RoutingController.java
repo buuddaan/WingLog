@@ -126,10 +126,6 @@ public class RoutingController {
             return authServiceUrl + strippedPath;
         } else if (strippedPath.startsWith("/users")) {
             return userServiceUrl + strippedPath;
-        } else if (strippedPath.startsWith("/posts") || strippedPath.startsWith("/feed")) {
-            return postServiceUrl + strippedPath;
-        } else if (strippedPath.startsWith("/forums") || strippedPath.startsWith("/threads")) {
-            return forumServiceUrl + strippedPath;
         } else if (strippedPath.startsWith("/sightings")) {
             return geoServiceUrl + strippedPath;
         } else if (strippedPath.startsWith("/photos")) {
