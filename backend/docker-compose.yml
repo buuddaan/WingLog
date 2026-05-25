@@ -40,6 +40,8 @@ services:
       - .env
     environment:
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_PROFILES_ACTIVE: docker
+      INTERNAL_SECRET: ${INTERNAL_SECRET}
 
   photo-service:
     build:
@@ -53,6 +55,7 @@ services:
       SPRING_DATASOURCE_URL: "jdbc:postgresql://aws-1-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_PROFILES_ACTIVE: docker
+      INTERNAL_SECRET: ${INTERNAL_SECRET}
 
   # ROTERAS OCH LÄGGS I .ENV SEN!!
   api-gateway:
