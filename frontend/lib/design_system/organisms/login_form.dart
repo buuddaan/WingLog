@@ -166,15 +166,6 @@ class LoginForm extends StatelessWidget {
             onPressed: onGoogleSignIn,
           ),
           const SizedBox(height: AppSpacing.lg),
-
-          TextButton.icon(
-              onPressed: onSkipLogin,
-              icon: const Icon(Icons.fast_forward, color: Colors.grey),
-              label: const Text(
-                'TILLFÄLLIGT: SKIPPA INLOGGNING',
-                style: TextStyle(color: Colors.red),
-              ),
-             ),
             ],
           ),
          ),
