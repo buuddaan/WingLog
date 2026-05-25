@@ -143,4 +143,16 @@ public class PhotoService {
 
         birdImageRepository.deleteByFolderNameAndUserId(folderName, userId);
     }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteAllByUserId(UUID userId) throws IOException {
+        List<BirdImage> images = birdImageRepository.findByUserId(userId);
+        for(BirdImage image : images) {
+            storageService.deleteImage(image.getPublicId());
+        }
+
+        for (BirdImage image : images) {
+            birdImageRepository.deleteByIdAndUserId(image.getId(), userId);
+        }
+    }
 }
