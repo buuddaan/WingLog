@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 class ApiConfig {
   // Byt ut detta mot den PUBLIKA IP-adressen till din SSH-server
@@ -15,7 +17,7 @@ class ApiConfig {
     }
     // telefoner är egna datorer på nätverket och måste peka på din dators IP.
     else {
-      return 'http://$_localIpAddress:8080/gateway';
+      return 'http://$_serverIp:8080/gateway';
     }
   }
 }
