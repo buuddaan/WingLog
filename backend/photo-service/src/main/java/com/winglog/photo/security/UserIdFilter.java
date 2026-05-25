@@ -31,4 +31,9 @@ public class UserIdFilter extends OncePerRequestFilter {
 
     }
 
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getRequestURI().startsWith("/internal");
+    }
+
 }

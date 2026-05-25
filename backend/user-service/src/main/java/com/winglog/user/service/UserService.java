@@ -3,6 +3,8 @@ package com.winglog.user.service;
 import com.winglog.user.dto.request.CreateProfileRequest;
 import com.winglog.user.dto.request.UpdateProfileRequest;
 import com.winglog.user.dto.response.UserProfileResponse;
+import com.winglog.user.internalcommunication.AuthServiceClient;
+import com.winglog.user.internalcommunication.PhotoServiceClient;
 import com.winglog.user.model.UserProfile;
 import com.winglog.user.repository.UserProfileRepository;
 import org.springframework.http.HttpStatus;
@@ -15,9 +17,13 @@ import java.util.UUID;
 @Service
 public class UserService {
     private final UserProfileRepository profileRepository;
+    private final AuthServiceClient authServiceClient;
+    private final PhotoServiceClient photoServiceClient;
 
-    public UserService(UserProfileRepository profileRepository) {
+    public UserService(UserProfileRepository profileRepository, AuthServiceClient authServiceClient, PhotoServiceClient photoServiceClient) {
         this.profileRepository = profileRepository;
+        this.authServiceClient = authServiceClient;
+        this.photoServiceClient = photoServiceClient;
     }
 
     // Hämtar den inloggade användarens egen profil /EF
@@ -78,12 +84,9 @@ public class UserService {
     public void deleteAccount(UUID userId) {
         if (!profileRepository.existsByUserId(userId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Profil hittades inte");
-
-            // TODO: Anropa auth-service för att radera credentials när kontot tas bort /EF
-            //  --> Väntar på att auth-service implementerar: DELETE /internal/users/{userId}.
-            //  Lägg till anrop här i deleteAccount() i UserService.java som anropar auth-service:8081 för att radera raden i auth-servicens users-tabell
         }
-
         profileRepository.deleteByUserId(userId);
+        photoServiceClient.deleteAllByUserId(userId);
+        authServiceClient.deleteUser(userId);
     }
 }
