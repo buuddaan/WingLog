@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'dart:io'; // NYTT: Behövs för att hantera filer på iOS/Android
+import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
@@ -8,9 +8,11 @@ import 'package:uuid/uuid.dart';
 import '../core/resources/api_config.dart';
 import '../design_system/molecules/camera_bottom_controls.dart';
 import '../design_system/molecules/camera_flow_bottom_bar.dart';
+import '../design_system/molecules/selection_action_row.dart';
+import '../design_system/molecules/loading_overlay.dart';
 import '../services/token_service.dart';
 
-// Vi tog bort 'bytes' härifrån för att spara RAM-minne på mobilen.
+// RAM-vänlig SessionImage för mobilen (inga bytes!)
 class SessionImage {
   final XFile file;
   final String imageId;
@@ -37,15 +39,16 @@ class _CameraScreenState extends State<CameraScreen> {
   bool isFlashOn = false;
 
   List<SessionImage> sessionImages = [];
-  int? selectedImageIndex;
+
+  // MULTI-SELECT är tillbaka från webbversionen!
+  Set<int> selectedIndices = {};
+
   bool isLoading = false;
   bool isViewingImage = false;
   final String sessionId = const Uuid().v4();
 
-  // VIKTIGT FÖR MOBIL: Byt ut 192.168.X.X mot din dators riktiga IP-adress!
-  // localhost fungerar inte på en iPhone eftersom telefonen är en egen enhet.
-// I gallery_screen.dart och folder_details_screen.dart
   final String _baseUrl = ApiConfig.baseUrl;
+
   @override
   void initState() {
     super.initState();
@@ -53,15 +56,13 @@ class _CameraScreenState extends State<CameraScreen> {
       debugPrint("Inga kameror hittades.");
       return;
     }
-    // Startar med den första kameran (oftast baksidan)
     _initCamera(widget.cameras.first);
   }
 
-  // Egen metod för att starta kameran så vi kan återanvända den när vi byter kamera
   Future<void> _initCamera(CameraDescription cameraInfo) async {
     controller = CameraController(
       cameraInfo,
-      ResolutionPreset.max, // Ger bäst bildkvalitet på mobilen
+      ResolutionPreset.high, // Bäst för mobil
       enableAudio: false,
     );
 
@@ -84,11 +85,9 @@ class _CameraScreenState extends State<CameraScreen> {
     super.dispose();
   }
 
-  // --- NYTT: Vänd kamera (Fram / Bak) ---
+  // --- KAMERAKONTROLLER ---
   void _switchCamera() async {
-    if (widget.cameras.length < 2) return; // Gör inget om vi bara har 1 kamera
-
-    // Hitta vilken riktning kameran har nu, och välj den andra
+    if (widget.cameras.length < 2) return;
     final currentDirection = controller.description.lensDirection;
     final newCamera = widget.cameras.firstWhere(
           (c) => c.lensDirection != currentDirection,
@@ -100,18 +99,32 @@ class _CameraScreenState extends State<CameraScreen> {
     _initCamera(newCamera);
   }
 
-  // --- NYTT: Riktig blixt-kontroll ---
   Future<void> _toggleFlash() async {
     if (!isCameraReady) return;
     try {
       setState(() => isFlashOn = !isFlashOn);
-      // Säger till hårdvaran att tända/släcka lampan vid kort
       await controller.setFlashMode(isFlashOn ? FlashMode.always : FlashMode.off);
     } catch (e) {
       debugPrint("Kunde inte ändra blixt: $e");
     }
   }
 
+  // --- SELEKTION ---
+  void _toggleSelection(int index) {
+    setState(() {
+      if (selectedIndices.contains(index)) {
+        selectedIndices.remove(index);
+        if (selectedIndices.isEmpty) {
+          isViewingImage = false;
+        }
+      } else {
+        selectedIndices.add(index);
+        isViewingImage = true;
+      }
+    });
+  }
+
+  // --- NÄTVERK & API ---
   Future<void> _takePicture() async {
     if (!isCameraReady || isTakingPicture) return;
 
@@ -125,9 +138,9 @@ class _CameraScreenState extends State<CameraScreen> {
 
       if (imageId != null) {
         setState(() {
-          // Vi sparar inte bytes! Bara filen och ID:t.
           sessionImages.add(SessionImage(file: image, imageId: imageId));
-          selectedImageIndex = null;
+          selectedIndices.clear();
+          isViewingImage = false;
         });
       }
     } catch (e) {
@@ -147,8 +160,7 @@ class _CameraScreenState extends State<CameraScreen> {
       request.fields['sessionId'] = sessionId;
       request.fields['date'] = now;
 
-      // --- NYTT FÖR MOBIL: Vi laddar upp filen direkt via dess path! ---
-      // Detta är otroligt mycket mer minneseffektivt än fromBytes på en iPhone.
+      // KÖR DIREKT FRÅN PATH (Sparar RAM!)
       request.files.add(await http.MultipartFile.fromPath('file', image.path));
 
       final streamed = await request.send();
@@ -165,60 +177,24 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  Future<void> _onCancel() async {
-    if (sessionImages.isEmpty) {
-      Navigator.pop(context);
-      return;
-    }
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Avbryt Session'),
-        content: const Text('Vill du radera alla bilder från denna session?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Behåll'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Radera', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (shouldDelete == true) {
-      await _deleteSession();
-    }
-    if (mounted) Navigator.pop(context);
-  }
-
-  Future<void> _deleteSession() async {
+  Future<void> _deleteSelectedImages() async {
     try {
       final token = await TokenService.getToken();
-      await http.delete(
-        Uri.parse('$_baseUrl/photos/delete-session?sessionId=$sessionId'),
-        headers: {'Authorization': 'Bearer $token'},
-      );
-    } catch (exception) {
-      debugPrint('Fel vid radering av session: $exception');
-    }
-  }
 
-  Future<void> _deleteImage(int index) async {
-    try {
-      final token = await TokenService.getToken();
-      final imageId = sessionImages[index].imageId;
-
-      await http.delete(
-        Uri.parse('$_baseUrl/photos/delete-image?imageId=$imageId'),
-        headers: {'Authorization': 'Bearer $token'},
-      );
+      for (int index in selectedIndices) {
+        final imageId = sessionImages[index].imageId;
+        await http.delete(
+          Uri.parse('$_baseUrl/photos/delete-image?imageId=$imageId'),
+          headers: {'Authorization': 'Bearer $token'},
+        );
+      }
 
       setState(() {
-        sessionImages.removeAt(index);
-        selectedImageIndex = null;
+        final sortedIndices = selectedIndices.toList()..sort((a, b) => b.compareTo(a));
+        for (int index in sortedIndices) {
+          sessionImages.removeAt(index);
+        }
+        selectedIndices.clear();
         isViewingImage = false;
       });
     } catch (exception) {
@@ -227,18 +203,20 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> _identifyBird() async {
-    if (selectedImageIndex == null) return;
+    if (selectedIndices.isEmpty) return;
 
     setState(() => isLoading = true);
     try {
       final token = await TokenService.getToken();
-      final image = sessionImages[selectedImageIndex!].file;
 
       var request = http.MultipartRequest('POST', Uri.parse('$_baseUrl/photos/identify'));
       request.headers['Authorization'] = 'Bearer $token';
 
-      // Även här använder vi fromPath
-      request.files.add(await http.MultipartFile.fromPath('file', image.path));
+      // Lägger till alla markerade bilder via deras fil-paths
+      for (int index in selectedIndices) {
+        final image = sessionImages[index].file;
+        request.files.add(await http.MultipartFile.fromPath('file', image.path));
+      }
 
       final streamed = await request.send();
       final response = await http.Response.fromStream(streamed);
@@ -250,7 +228,7 @@ class _CameraScreenState extends State<CameraScreen> {
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Kunde inte identifiera fågeln.')),
+          const SnackBar(content: Text('Kunde inte identifiera fågeln, försök med en annan bild')),
         );
       }
     } catch (exception) {
@@ -325,7 +303,12 @@ class _CameraScreenState extends State<CameraScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Sparad i mappen "$folderName"')),
         );
-        Navigator.pop(context);
+        // Återgår till live-kameran (Web-beteendet)
+        setState(() {
+          sessionImages.clear();
+          selectedIndices.clear();
+          isViewingImage = false;
+        });
       }
     } catch (exception) {
       debugPrint('Fel vid sparning: $exception');
@@ -348,7 +331,12 @@ class _CameraScreenState extends State<CameraScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Bilder sparade som oidentifierade')),
         );
-        Navigator.pop(context);
+        // Återgår till live-kameran (Web-beteendet)
+        setState(() {
+          sessionImages.clear();
+          selectedIndices.clear();
+          isViewingImage = false;
+        });
       }
     } catch (exception) {
       debugPrint('Fel uppstod när bilder skulle sparas: $exception');
@@ -357,140 +345,176 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
+  Future<void> _onCancel() async {
+    if (sessionImages.isEmpty) {
+      setState(() {
+        selectedIndices.clear();
+        isViewingImage = false;
+      });
+      return;
+    }
+
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Avbryt Session'),
+        content: const Text('Vill du radera alla bilder från denna session?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Behåll'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Radera', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true) {
+      await _deleteSession();
+      if (mounted) {
+        // Nollställer appen (Web-beteendet)
+        setState(() {
+          sessionImages.clear();
+          selectedIndices.clear();
+          isViewingImage = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _deleteSession() async {
+    try {
+      final token = await TokenService.getToken();
+      await http.delete(
+        Uri.parse('$_baseUrl/photos/delete-session?sessionId=$sessionId'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+    } catch (exception) {
+      debugPrint('Fel vid radering av session: $exception');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!isCameraReady) {
       return const Scaffold(
         backgroundColor: Colors.black,
-        body: Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
+        body: LoadingOverlay(),
       );
     }
 
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Stack(
-          children: [
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          // 1. BAKGRUND: Kameran
+          Positioned.fill(
+            child: CameraPreview(controller),
+          ),
+
+          // 1B. VALD BILD OVANPÅ: Ritas ut ovanpå kameran om en bild är klickad
+          if (isViewingImage && selectedIndices.isNotEmpty)
             Positioned.fill(
-              child: isViewingImage && selectedImageIndex != null
-              // --- NYTT FÖR MOBIL: Image.file istället för Image.memory ---
-                  ? Image.file(
-                File(sessionImages[selectedImageIndex!].file.path),
+              child: Image.file(
+                File(sessionImages[selectedIndices.last].file.path),
                 fit: BoxFit.cover,
-              )
-                  : CameraPreview(controller),
+              ),
             ),
 
-            if (sessionImages.isNotEmpty)
-              Positioned(
-                top: 12,
-                left: 12,
-                right: 12,
-                child: SizedBox(
-                  height: 72,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: sessionImages.length,
-                    itemBuilder: (context, index) {
-                      final isSelected = selectedImageIndex == index;
-                      return GestureDetector(
-                        onTap: () => setState(() {
-                          selectedImageIndex = index;
-                          isViewingImage = true;
-                        }),
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: isSelected ? Colors.blue : Colors.white,
-                              width: isSelected ? 3 : 1.5,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
+          // 2. TOPP: Lista med tumnaglar
+          if (sessionImages.isNotEmpty)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 12,
+              left: 12,
+              right: 12,
+              child: SizedBox(
+                height: 72,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: sessionImages.length,
+                  itemBuilder: (context, index) {
+                    final isSelected = selectedIndices.contains(index);
+                    return GestureDetector(
+                      onTap: () => _toggleSelection(index),
+                      onLongPress: () => _toggleSelection(index),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: isSelected ? Colors.blue : Colors.transparent,
+                            width: isSelected ? 3 : 0,
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            // --- NYTT FÖR MOBIL: Image.file för thumbnails ---
-                            child: Image.file(
-                              File(sessionImages[index].file.path),
-                              width: 60,
-                              fit: BoxFit.cover,
-                            ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.file(
+                            File(sessionImages[index].file.path),
+                            width: 60,
+                            fit: BoxFit.cover,
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
+            ),
 
-            if (isViewingImage && selectedImageIndex != null)
-              Positioned(
-                bottom: 120, // Flyttade upp lite så den inte krockar med bottom baren
-                left: 16,
-                right: 16,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton.icon(
-                      onPressed: () => setState(() {
-                        isViewingImage = false;
-                        selectedImageIndex = null;
-                      }),
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      label: const Text('Tillbaka', style: TextStyle(color: Colors.white)),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => _deleteImage(selectedImageIndex!),
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      label: const Text('Radera', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
-              ),
-
-            // Stängkryss
+          // 3. MELLAN: De flygande knapparna för radering/tillbaka (multi-select)
+          if (isViewingImage && selectedIndices.isNotEmpty)
             Positioned(
-              top: 16,
+              bottom: 120,
+              left: 16,
+              right: 16,
+              child: SelectionActionRow(
+                onBack: () => setState(() {
+                  isViewingImage = false;
+                  selectedIndices.clear();
+                }),
+                onDelete: _deleteSelectedImages,
+                selectedCount: selectedIndices.length,
+              ),
+            ),
+
+          // Stängkryss för kameran om man helt vill lämna skärmen
+          if (sessionImages.isEmpty)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 16,
               right: 16,
               child: IconButton(
                 icon: const Icon(Icons.close, color: Colors.white, size: 32),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(context), // Stänger hela kameran
               ),
             ),
 
-            // Bottenmeny (Kameraknappar eller spar-flöde)
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 40,
-              child: sessionImages.isEmpty
-                  ? CameraBottomControls(
-                onGalleryPressed: _toggleFlash, // Knapp för blixt
-                onShutterPressed: _takePicture, // Ta bild
-                onSwitchCameraPressed: _switchCamera, // Vänd kamera
-                isCaptureEnabled: !isTakingPicture,
-                isLeftActive: isFlashOn,
-              )
-                  : CameraFlowBottomBar(
-                onCancel: _onCancel,
-                onIdentify: _identifyBird,
-                onSave: _saveImage,
-                isIdentifyEnabled: selectedImageIndex != null,
-              ),
+          // 4. BOTTENMENY
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 40,
+            child: selectedIndices.isEmpty
+                ? CameraBottomControls(
+              onGalleryPressed: _toggleFlash,
+              onShutterPressed: _takePicture,
+              onSwitchCameraPressed: _switchCamera,
+              isCaptureEnabled: !isTakingPicture,
+              isLeftActive: isFlashOn,
+            )
+                : CameraFlowBottomBar(
+              onCancel: _onCancel,
+              onIdentify: _identifyBird,
+              onSave: _saveImage,
+              isIdentifyEnabled: selectedIndices.isNotEmpty,
             ),
+          ),
 
-            // Visar laddningshjul vid AI-identifiering
-            if (isLoading)
-              Container(
-                color: Colors.black54,
-                child: const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                ),
-              ),
-          ],
-        ),
+          // 5. LADDNING
+          if (isLoading) const LoadingOverlay(),
+        ],
       ),
     );
   }
