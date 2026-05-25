@@ -133,6 +133,74 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       const SnackBar(content: Text('Kunde inte öppna Google-inloggningen.')),
     );
   }
+  Future<void> _showForgotPasswordDialog() async {
+    final emailController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFFF4FFFD), // AppColors.surface
+        title: const Text('Återställ lösenord'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Ange e-postadressen som är kopplad till ditt konto så skickar vi en återställningslänk.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: 'E-postadress',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Avbryt'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final email = emailController.text.trim();
+              if (email.isEmpty) return;
+
+              Navigator.pop(ctx); // Stäng dialogen
+              await _sendPasswordResetRequest(email);
+            },
+            child: const Text('Skicka', style: TextStyle(color: Color(0xFF3B4A3F))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _sendPasswordResetRequest(String email) async {
+    // Visar en tillfällig laddningslapp
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Skickar förfrågan...')),
+    );
+
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/auth/forgot-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        _showSnackBar('Ett e-postmeddelande har skickats till $email med instruktioner.');
+      } else {
+        _showSnackBar('Kunde inte återställa lösenordet. Kontrollera adressen.');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _showSnackBar('Nätverksfel. Kunde inte nå servern.');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,6 +220,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               passwordController: _passwordController,
               onSubmit: _submitForm,
               onGoogleSignIn: _handleGoogleSignIn,
+
+              // HÄR ska den ligga, som en egen parameter till LoginForm!
+              onForgotPassword: _showForgotPasswordDialog,
+
               onToggleMode: () {
                 setState(() {
                   _isLogin = !_isLogin;
@@ -168,6 +240,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ),
         ],
       ),
-    );
+    ); // Glöm inte att stänga Scaffold med parentes och semikolon!
   }
 }

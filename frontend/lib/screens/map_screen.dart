@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:geolocator/geolocator.dart'; // <-- NY IMPORT! Vi använder ditt befintliga paket
 import '../services/geo_service.dart';
 
 class MapScreen extends StatefulWidget {
@@ -12,41 +13,56 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  // Styr om sökfältet är aktivt (expanderat) eller visar platshållartext
   bool _isSearching = false;
-
-  // Kontrollerar Google Maps-kartan, t.ex. för att flytta kameran
   GoogleMapController? _mapController;
-
-  // API-nyckel för Google Maps (Geocoding). Används vid platssökning.
   static const String _mapsApiKey = 'AIzaSyBBRoH_10iOdpYF7_FUuEJLay_DGeFq7y8';
-
-  // Visar en laddningsspinner i sökfältet medan sökning pågår
   bool _isLoading = false;
 
-  // Pins från platssökning (visas när användaren söker en adress)
   Set<Marker> _markers = {};
-
-  // Pins från sparade fågelobservationer (laddas från backend vid start)
   Set<Marker> _sightingMarkers = {};
-
-  // Pins för aktiv artsökning (null = inget filter)
   Set<Marker>? _filteredSightingMarkers;
   String? _activeSpeciesFilter;
 
-  // Styr om användaren är i "placera pin"-läge (aktiveras via +-knappen)
   bool _placingPin = false;
   bool _canPlace = false;
+
+  bool _locationPermissionGranted = false;
 
   @override
   void initState() {
     super.initState();
-    // Hämta befintliga observationer från backend och visa dem som pins
     _loadSightings();
+    _requestLocationPermission();
   }
 
-  // Hämtar alla sparade fågelobservationer från geo-service via GeoService
-  // och omvandlar dem till gröna pins på kartan
+  // --- NY FUNKTION: Använder geolocator istället för permission_handler ---
+  Future<void> _requestLocationPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Kolla först om GPS är påslaget på telefonen
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return;
+    }
+
+    // Kolla nuvarande behörighet
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      // Fråga om lov! (Denna kommer trigga iOS inbyggda ruta direkt)
+      permission = await Geolocator.requestPermission();
+    }
+
+    // Om vi fick ja, visa knappen på kartan!
+    if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+      if (mounted) {
+        setState(() {
+          _locationPermissionGranted = true;
+        });
+      }
+    }
+  }
+
   Future<void> _loadSightings() async {
     try {
       final sightings = await GeoService.getSightings();
@@ -59,13 +75,9 @@ class _MapScreenState extends State<MapScreen> {
           onTap: () => _showSightingOptions(s),
         )).toSet();
       });
-    } catch (_) {
-      // Om backend inte är tillgänglig visas inga pins — appen kraschar inte
-    }
+    } catch (_) {}
   }
 
-  // Visas när användaren trycker på en befintlig observation-pin
-  // Ger möjlighet att ta bort observationen
   Future<void> _showSightingOptions(Sighting s) async {
     final delete = await showDialog<bool>(
       context: context,
@@ -95,9 +107,6 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  // Anropas när användaren trycker på kartan.
-  // Gör inget om "placera pin"-läget inte är aktivt.
-  // Om läget är aktivt: stänger läget, öppnar dialog för att fylla i art och beskrivning.
   Future<void> _onMapTap(LatLng pos) async {
     if (!_placingPin || !_canPlace) return;
     setState(() { _placingPin = false; _canPlace = false; });
@@ -105,8 +114,6 @@ class _MapScreenState extends State<MapScreen> {
     final speciesController = TextEditingController();
     final descController = TextEditingController();
 
-    // barrierDismissible: false = dialogen stängs BARA via knapparna, inte genom att
-    // trycka utanför. Det förhindrar att kartan råkar ta emot trycket och öppnar dialogen igen.
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -133,17 +140,14 @@ class _MapScreenState extends State<MapScreen> {
       ),
     );
 
-    // Spara bara om användaren tryckte Spara och fyllde i ett artnamn
     if (confirmed == true && speciesController.text.trim().isNotEmpty) {
       try {
-        // Skickar koordinater + artnamn + beskrivning till geo-service via GeoService
         await GeoService.createSighting(
           latitude: pos.latitude,
           longitude: pos.longitude,
           speciesName: speciesController.text.trim(),
           description: descController.text.trim().isEmpty ? null : descController.text.trim(),
         );
-        // Ladda om alla pins så den nya observationen syns direkt
         await _loadSightings();
       } catch (e) {
         if (mounted) {
@@ -155,7 +159,6 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  // Söker både fågelarter (backend) och platser (Geocoding API) parallellt
   Future<void> _search(String query) async {
     setState(() => _isLoading = true);
 
@@ -210,7 +213,6 @@ class _MapScreenState extends State<MapScreen> {
     return [];
   }
 
-  // Flyttar kameran till vald plats och sätter en röd sökpin där
   void _goToLocation(dynamic result) {
     final loc = result['geometry']['location'];
     final pos = LatLng(loc['lat'], loc['lng']);
@@ -222,10 +224,7 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  // Styr texten i sökfältet
   final TextEditingController _searchController = TextEditingController();
-
-  // Startposition för kartan (Stockholm)
   final LatLng _initialPosition = const LatLng(59.3293, 18.0686);
 
   @override
@@ -234,18 +233,20 @@ class _MapScreenState extends State<MapScreen> {
       backgroundColor: const Color(0xFFF5F5DC),
       body: Stack(
         children: [
-          // Själva Google Maps-kartan
           GoogleMap(
             onMapCreated: (controller) => _mapController = controller,
             markers: {..._markers, ...(_filteredSightingMarkers ?? _sightingMarkers)},
             onTap: _onMapTap,
+
+            myLocationEnabled: _locationPermissionGranted,
+            myLocationButtonEnabled: _locationPermissionGranted,
+
             initialCameraPosition: CameraPosition(
               target: _initialPosition,
               zoom: 12,
             ),
           ),
 
-          // Filterchip som visas när artsökning är aktiv
           if (_activeSpeciesFilter != null)
             Positioned(
               top: MediaQuery.of(context).padding.top + 190,
@@ -264,7 +265,6 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
 
-          // Banner som visas längst ned när "placera pin"-läget är aktivt
           if (_placingPin)
             Positioned(
               bottom: 100,
@@ -290,24 +290,20 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
 
-          // DE TVÅ KNAPPARNA (Sök, Placera Pin) SAMLADE UNDER HAMBURGERMENYN
           Positioned(
-            top: MediaQuery.of(context).padding.top + 9, // Tryckt ner 72px för att ge plats åt Flutters egna menyknapp
+            top: MediaQuery.of(context).padding.top + 9,
             left: 9,
-            right: 9, // right: 16 gör att sökfältet vet hur brett det får lov att bli när det expanderar
+            right: 9,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
-                // 1. Sökfältet
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
                   height: 48,
-                  // Om vi söker tar vi upp skärmens bredd (minus marginaler). Annars 48px för en cirkel.
                   width: _isSearching ? MediaQuery.of(context).size.width - 32 : 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF081145), // Mörk transparent färg
+                    color: const Color(0xFF081145),
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: ClipRRect(
@@ -320,52 +316,52 @@ class _MapScreenState extends State<MapScreen> {
                         height: 48,
                         child: _isSearching
                             ? TextField(
-                                controller: _searchController,
-                                autofocus: true,
-                                style: const TextStyle(color: Colors.white), // Vit text när man skriver
-                                decoration: InputDecoration(
-                                  hintText: 'Sök på plats eller fågel...',
-                                  hintStyle: const TextStyle(color: Colors.white70), // Ljusgrå hint-text
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  suffixIcon: _isLoading
-                                      ? const Padding(
-                                          padding: EdgeInsets.all(12.0),
-                                          child: SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2.5,
-                                              color: Colors.white, // Vit laddningshjul
-                                            ),
-                                          ),
-                                        )
-                                      : IconButton(
-                                          icon: const Icon(Icons.close, color: Colors.white),
-                                          onPressed: () {
-                                            setState(() {
-                                              _isSearching = false;
-                                              _searchController.clear();
-                                            });
-                                          },
-                                        ),
-                                ),
-                                onSubmitted: _search,
-                              )
-                            : Align(
-                                alignment: Alignment.centerLeft,
-                                child: SizedBox(
-                                  width: 48,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.search, color: Colors.white),
-                                    onPressed: () {
-                                      setState(() {
-                                        _isSearching = true;
-                                      });
-                                    },
-                                  ),
+                          controller: _searchController,
+                          autofocus: true,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'Sök på plats eller fågel...',
+                            hintStyle: const TextStyle(color: Colors.white70),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            suffixIcon: _isLoading
+                                ? const Padding(
+                              padding: EdgeInsets.all(12.0),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
                                 ),
                               ),
+                            )
+                                : IconButton(
+                              icon: const Icon(Icons.close, color: Colors.white),
+                              onPressed: () {
+                                setState(() {
+                                  _isSearching = false;
+                                  _searchController.clear();
+                                });
+                              },
+                            ),
+                          ),
+                          onSubmitted: _search,
+                        )
+                            : Align(
+                          alignment: Alignment.centerLeft,
+                          child: SizedBox(
+                            width: 48,
+                            child: IconButton(
+                              icon: const Icon(Icons.search, color: Colors.white),
+                              onPressed: () {
+                                setState(() {
+                                  _isSearching = true;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -373,7 +369,6 @@ class _MapScreenState extends State<MapScreen> {
 
                 const SizedBox(height: 12),
 
-                // 2. Placera Pin-knapp
                 Container(
                   width: 48,
                   height: 48,
