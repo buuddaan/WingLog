@@ -16,6 +16,7 @@ class LoginForm extends StatelessWidget {
     required this.onGoogleSignIn,
     required this.onToggleMode,
     required this.onSkipLogin,
+    required this.onForgotPassword,
     required this.rememberMe,
     required this.onRememberMeChanged,
   });
@@ -29,6 +30,7 @@ class LoginForm extends StatelessWidget {
   final VoidCallback onGoogleSignIn;
   final VoidCallback onToggleMode;
   final VoidCallback onSkipLogin;
+  final VoidCallback onForgotPassword;
   final bool rememberMe;
   final ValueChanged<bool> onRememberMeChanged;
 
@@ -109,18 +111,21 @@ class LoginForm extends StatelessWidget {
             ),
 
           if (isLogin)
-          const Align(
-            alignment: Alignment.center,
-            child: Text(
-              'Har du glömt lösenord?',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                fontFamily: 'Plus Jakarta Sans',
-                fontWeight: FontWeight.w400,
+            Align(
+              alignment: Alignment.center,
+              child: TextButton(
+                onPressed: onForgotPassword, // <-- Här triggas funktionen!
+                child: const Text(
+                  'Har du glömt lösenord?',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
               ),
             ),
-          ),
 
           const SizedBox(height: AppSpacing.lg),
 

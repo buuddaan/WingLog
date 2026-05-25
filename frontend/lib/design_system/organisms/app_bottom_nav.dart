@@ -48,11 +48,6 @@ class AppBottomNav extends StatelessWidget {
             label: 'Spela in ljud',
             index: 3,
           ),
-          _buildNavItem(
-            icon: AppIcons.myCollection,
-            label: 'TrueLogin',
-            index: 4,
-          ),
         ],
       ),
     );
