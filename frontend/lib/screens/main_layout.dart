@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/login_test_screen.dart';
+import '../core/theme/app_gradients.dart';
 import 'map_screen.dart';
 import 'camera_screen.dart';
 import '../main.dart'; // För 'cameras'-variabeln
@@ -36,20 +37,34 @@ class _MainLayoutState extends State<MainLayout> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         scrolledUnderElevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white, shadows: [Shadow(color: Colors.black, blurRadius: 10)]), // Vit menyikon så den syns på kameran
-      ),
+        iconTheme: const IconThemeData(
+            color: Colors.white,
+            shadows: [
+              Shadow(color: Colors.black, blurRadius: 10),
+            ],
+        ),
+        ),// Vit menyikon så den syns på kameran
 
       // 1. DRAWER (MENY)
       drawer: SizedBox(
         width: MediaQuery.of(context).size.width * 0.85,
         child: Drawer(
-          backgroundColor: const Color(0xFFF5F5DC),
+          backgroundColor: const Color(0xFFF4FFFD),
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
               const DrawerHeader(
-                decoration: BoxDecoration(color: Color(0xFF2D5A27)),
-                child: Text('WingLog', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                decoration: BoxDecoration(
+                  gradient: AppGradients.loginBackground //ändrat header där det står WingLog
+                ),
+                child: Text(
+                    'WingLog',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                    ),
+                ),
               ),
               ListTile(
                 leading: const Icon(Icons.account_circle, color: Color(0xFF2D5A27)),

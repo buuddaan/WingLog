@@ -283,7 +283,7 @@ class _CameraScreenState extends State<CameraScreen> {
               return Text('${c['species']} - $percent%');
             }),
             const SizedBox(height: 16),
-            const Text('Namnge mappen;'),
+            const Text('Namnge mappen,'),
             const SizedBox(height: 8),
             TextField(
               controller: folderController,
@@ -376,8 +376,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Stack(
+      body: Stack(
         children: [
           Positioned.fill(
             child: isViewingImage && selectedImageIndex != null && sessionImages[selectedImageIndex!].bytes != null ? Image.memory(
@@ -486,7 +485,6 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ),
           ],
-        ),
       ),
     );
   }

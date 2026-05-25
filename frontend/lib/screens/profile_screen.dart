@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/design_system/atoms/neutral_button.dart';
 import 'dart:convert';
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_gradients.dart';
 import '../services/token_service.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -46,11 +49,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5DC),
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
         title: const Text('Min Profil'),
-        backgroundColor: const Color(0xFF2D5A27),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
+        flexibleSpace:Container(
+          decoration:  BoxDecoration(
+            gradient: AppGradients.loginBackground, //ändrat header där det står min profil
+        ),
+        ),
       ),
       body: Center(
         child: Column(
@@ -71,19 +79,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 60),
 
             // Vi har flyttat utloggningsknappen hit från menyn!
-            OutlinedButton.icon(
-              onPressed: () {
-                Navigator.pop(context); // Stäng profilsidan
-                widget.onLogout();      // Trigga utloggning i main.dart
-              },
-              icon: const Icon(Icons.logout, color: Colors.red),
-              label: const Text('Logga ut', style: TextStyle(color: Colors.red, fontSize: 18)),
-              style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.red, width: 2),
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15)
-              ),
-            ),
-          ],
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+              NeutralButton.medium(
+                text: 'Logga ut',
+                onPressed: () {
+                  Navigator.pop(context);
+                  widget.onLogout();
+                },
+               ),
+             ],
+           ),
+         ],
         ),
       ),
     );
