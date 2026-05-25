@@ -5,10 +5,13 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -20,7 +23,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
             "/gateway/auth/login",
             "/gateway/auth/register",
+            "/gateway/auth/forgot-password",
+            "/gateway/auth/reset-password",
+            "/gateway/auth/exchange",
             "/gateway/health"
+    );
+
+    private static final List<String> PUBLIC_PREFIXES = List.of(
+            "/gateway/oauth2/",
+            "/gateway/login/oauth2/"
     );
 
     public JwtAuthFilter(JwtUtil jwtUtil) {
@@ -49,6 +60,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
+        // Släpp igenom OAuth2-flödet utan JWT (användaren har ingen token ännu)
+        if (PUBLIC_PREFIXES.stream().anyMatch(path::startsWith)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -65,8 +82,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        request.setAttribute("X-User-Email", jwtUtil.readEmail(token));
-        request.setAttribute("X-User-Id", jwtUtil.readUserId(token));
+        String email = jwtUtil.readEmail(token);
+        String userId = jwtUtil.readUserId(token);
+
+        request.setAttribute("X-User-Email", email);
+        request.setAttribute("X-User-Id", userId);
+
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                email, null, Collections.emptyList()
+        );
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
         filterChain.doFilter(request, response);
     }

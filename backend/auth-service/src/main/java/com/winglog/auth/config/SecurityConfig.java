@@ -36,7 +36,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         http.authorizeHttpRequests((authorize) -> authorize
-                .requestMatchers("/auth/register", "/auth/login", "/auth/forgot-password", "/auth/reset-password")
+
+                .requestMatchers("/auth/register", "/auth/login", "/auth/forgot-password", "/auth/reset-password", "/auth/exchange", "/internal/**")
                 .permitAll()
                 .anyRequest()
                 .authenticated())
@@ -45,6 +46,4 @@ public class SecurityConfig {
 
                 return http.build();
     }
-
-
 }

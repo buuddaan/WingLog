@@ -37,13 +37,8 @@ class _MainLayoutState extends State<MainLayout> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         scrolledUnderElevation: 0,
-        iconTheme: const IconThemeData(
-            color: Colors.white,
-            shadows: [
-              Shadow(color: Colors.black, blurRadius: 10),
-            ],
-        ),
-        ),// Vit menyikon så den syns på kameran
+        iconTheme: const IconThemeData(color: Colors.white, shadows: [Shadow(color: Colors.black, blurRadius: 10)]), // Vit menyikon så den syns på kameran
+      ),
 
       // 1. DRAWER (MENY)
       drawer: SizedBox(
@@ -55,19 +50,19 @@ class _MainLayoutState extends State<MainLayout> {
             children: [
               const DrawerHeader(
                 decoration: BoxDecoration(
-                  gradient: AppGradients.loginBackground //ändrat header där det står WingLog
+                    gradient: AppGradients.loginBackground
                 ),
                 child: Text(
-                    'WingLog',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                    ),
+                  'WingLog',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.account_circle, color: Color(0xFF2D5A27)),
+                leading: const Icon(Icons.account_circle, color: Color(0xFF081145)),
                 title: const Text('Min Profil / Inställningar'),
                 onTap: () {
                   Navigator.pop(context); // Stäng menyn

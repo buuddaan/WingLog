@@ -19,6 +19,7 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
   bool _isLogin = true;
+  bool _rememberMe = false;
   final _formKey = GlobalKey<FormState>();
 
   final _usernameController = TextEditingController();
@@ -53,14 +54,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     return Uri.parse('$_baseUrl$endpoint');
   }
 
-  Map<String, String> _buildAuthRequestBody() {
-    final requestBody = {
+  Map<String, dynamic> _buildAuthRequestBody() {
+    final requestBody = <String, dynamic>{
       'username': _usernameController.text,
       'password': _passwordController.text,
     };
 
     if (!_isLogin) {
       requestBody['email'] = _emailController.text;
+    }
+
+    if (_isLogin) {
+      requestBody['rememberMe'] = _rememberMe;
     }
 
     return requestBody;
@@ -77,6 +82,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       final token = data['token'];
 
       await TokenService.saveToken(token);
+      await TokenService.saveRememberMe(_isLogin && _rememberMe);
 
       _showSnackBar(_isLogin ? 'Välkommen tillbaka!' : 'Konto skapat!');
       widget.onLoginSuccess();
@@ -106,7 +112,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
-  // --- HÄR ÄR DEN NYA GOOGLE-INLOGGNINGEN ---
+  // --- HÄR ÄR DEN NYA GOOGLE-INLOGGNINGEN --- // Axel, denna ändras efter API config för att lösa telefon google?
   static const String _googleLoginUrl = 'http://localhost:8080/gateway/oauth2/authorization/google';
 
   Future<void> _handleGoogleSignIn() async {
@@ -156,6 +162,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 });
               },
               onSkipLogin: widget.onLoginSuccess,
+              rememberMe: _rememberMe,
+              onRememberMeChanged: (val) => setState(() => _rememberMe = val),
             ),
           ),
         ],

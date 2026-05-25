@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:frontend/design_system/atoms/app_gradient_background.dart';
 
 import '../core/resources/api_config.dart';
+import '../services/token_service.dart';
 
 class SoundRecordingScreen extends StatelessWidget{
     const SoundRecordingScreen ({super.key});
@@ -91,8 +92,10 @@ class _ListeningScreenState extends State<ListeningScreen> {
     if (path != null) {
       try {
         // Detta skapar: http://DIN-IP:8080/gateway/audio/identify
+        final token = await TokenService.getToken();
         final uri = Uri.parse('${ApiConfig.baseUrl}/audio/identify');
         final request = http.MultipartRequest('POST', uri);
+        request.headers['Authorization'] = 'Bearer $token';
 
         if (kIsWeb) {
           final response = await http.get(Uri.parse(path));
@@ -219,7 +222,6 @@ class _ListeningScreenState extends State<ListeningScreen> {
     );
   }
 }
-
 class RecognitionResultScreen extends StatefulWidget {
   final String? recordedFilePath;
   final Map<String, dynamic>? birdResult;
@@ -229,7 +231,6 @@ class RecognitionResultScreen extends StatefulWidget {
     this.recordedFilePath,
     this.birdResult,
   });
-
 
   @override
   State<RecognitionResultScreen> createState() => _RecognitionResultScreenState();
@@ -257,7 +258,7 @@ class _RecognitionResultScreenState extends State<RecognitionResultScreen> {
         _isPlaying = true;
       });
     } catch (e) {
-        debugPrint('Playback error: $e');
+      debugPrint('Playback error: $e');
     }
   }
 
@@ -274,94 +275,122 @@ class _RecognitionResultScreenState extends State<RecognitionResultScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AppGradientBackground(
-          child: SafeArea(
-              child: Padding(
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // HUVUDINNEHÅLLET
+              Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: Column(
                   children: [
-                  SectionHeader(
-                    title: 'Resultat',
-                    centerTitle: true,
-                    trailing: IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.settings_outlined),
+                    const SectionHeader(
+                      title: 'Resultat',
+                      centerTitle: true,
                     ),
-                  ),
 
-              Expanded(
-              child: Center(
-                child: SingleChildScrollView(
-                  child: Padding(
-                   padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                       children: [
-                        const Text(
-                        'Ljudigenkänning klar',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                    Expanded(
+                      child: Center(
+                        child: SingleChildScrollView(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  'Ljudigenkänning klar',
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
 
-                      const SizedBox(height: 24),
-                      const Icon(
-                       Icons.flutter_dash,
-                       size: 120,
-                       color: Color(0xFF2D5A27),
-                      ),
+                                const SizedBox(height: 24),
+                                const Icon(
+                                  Icons.flutter_dash,
+                                  size: 120,
+                                  color: Color(0xFF2D5A27),
+                                ),
 
-                      const SizedBox(height: 16),
-                      if (widget.birdResult?['suggestions'] != null) ...[
-                        ...(widget.birdResult!['suggestions'] as List).map((s) {
-                          final pct = ((s['confidence'] as num) * 100).toStringAsFixed(1);
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            child: ListTile(
-                              leading: const Icon(Icons.flutter_dash, color: Color(0xFF2D5A27),
-                              ),
-                              title: Text(
-                                s['birdName'] ?? 'Okänd',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Text(
-                                s['scientificName'] ?? '',
-                                style: const TextStyle(fontStyle: FontStyle.italic),
-                              ),
-                              trailing: Text('$pct%', style: const TextStyle(fontSize: 16),
+                                const SizedBox(height: 16),
+                                if (widget.birdResult?['suggestions'] != null) ...[
+                                  ...(widget.birdResult!['suggestions'] as List).map((s) {
+                                    final pct = ((s['confidence'] as num) * 100).toStringAsFixed(1);
+                                    return Card(
+                                      margin: const EdgeInsets.symmetric(vertical: 6),
+                                      child: ListTile(
+                                        leading: const Icon(
+                                          Icons.flutter_dash,
+                                          color: Color(0xFF2D5A27),
+                                        ),
+                                        title: Text(
+                                          s['birdName'] ?? 'Okänd',
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                        subtitle: Text(
+                                          s['scientificName'] ?? '',
+                                          style: const TextStyle(fontStyle: FontStyle.italic),
+                                        ),
+                                        trailing: Text(
+                                          '$pct%',
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ] else
+                                  const Text(
+                                    'Kunde inte identifiera fågeln.',
+                                    textAlign: TextAlign.center,
+                                  ),
+
+                                const SizedBox(height: 20),
+                                if (widget.recordedFilePath != null)
+                                  Text(
+                                    'Inspelad fil:\n${widget.recordedFilePath}',
+                                    textAlign: TextAlign.center,
+                                  ),
+
+                                const SizedBox(height: 32),
+
+                                // Endast Spela upp-knappen är kvar här i botten
+                                ElevatedButton.icon(
+                                  onPressed: _isPlaying ? _stopPlayback : _playRecording,
+                                  icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
+                                  label: Text(_isPlaying ? 'Stoppa ljud' : 'Spela upp ljud'),
+                                ),
+                              ],
                             ),
-                            ),
-                          );
-                        }),
-                      ] else
-                        const Text(
-                          'Kunde inte identifiera fågeln.',
-                          textAlign: TextAlign.center,
+                          ),
                         ),
-
-                      const SizedBox(height: 20),
-                      if (widget.recordedFilePath != null)
-                      Text(
-                        'Inspelad fil:\n${widget.recordedFilePath}',
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox (height: 20),
-                      ElevatedButton(
-                        onPressed: _isPlaying ? _stopPlayback : _playRecording,
-                        child: Text(_isPlaying ? 'Stoppa ljud' : 'Spela upp ljud',
                       ),
                     ),
                   ],
-                 ),
                 ),
-               ),
               ),
-            ),
+
+              // NYTT: PERMANENT TILLBAKAPIL MED SVART BAKGRUND
+              Positioned(
+                top: AppSpacing.sm,
+                left: AppSpacing.sm,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.black54, // Halvgenomskinlig svart
+                    shape: BoxShape.circle, // Perfekt rund
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () {
+                      if (_isPlaying) _player.stop(); // Stoppar ljudet om det spelas
+                      Navigator.pop(context); // Går tillbaka
+                    },
+                  ),
+                ),
+              ),
+
             ],
           ),
         ),
-       ),
       ),
     );
   }

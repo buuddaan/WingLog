@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/design_system/atoms/neutral_button.dart';
 import 'dart:convert';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_gradients.dart';
+import '../design_system/atoms/neutral_button.dart';
 import '../services/token_service.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -57,14 +57,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         flexibleSpace:Container(
           decoration:  BoxDecoration(
             gradient: AppGradients.loginBackground, //ändrat header där det står min profil
-        ),
+          ),
         ),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.account_circle, size: 100, color: Color(0xFF2D5A27)),
+            const Icon(Icons.account_circle, size: 100, color : AppColors.textPrimary),
             const SizedBox(height: 16),
             Text(
               'Inloggad som:',
@@ -73,7 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 8),
             Text(
               _username, // Här visas mail eller namnet!
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF2D5A27)),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color : AppColors.textPrimary),
             ),
 
             const SizedBox(height: 60),
@@ -82,16 +82,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-              NeutralButton.medium(
-                text: 'Logga ut',
-                onPressed: () {
-                  Navigator.pop(context);
-                  widget.onLogout();
-                },
-               ),
-             ],
-           ),
-         ],
+                NeutralButton.medium(
+                  text: 'Logga ut',
+                  onPressed: () {
+                    Navigator.pop(context);
+                    widget.onLogout();
+                  },
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
