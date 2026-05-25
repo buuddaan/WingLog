@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 class ApiConfig {
   // Byt ut detta mot den PUBLIKA IP-adressen till din SSH-server
-  static const String _serverIp = '123.45.67.89';
+  static const String _serverIp = '65.21.190.58';
 
   static String get baseUrl {
     // Webbläsaren (Chrome) körs på datorn och hittar din backend via localhost.
