@@ -4,6 +4,7 @@ import com.winglog.user.dto.request.CreateProfileRequest;
 import com.winglog.user.dto.request.UpdateProfileRequest;
 import com.winglog.user.dto.response.UserProfileResponse;
 import com.winglog.user.internalcommunication.AuthServiceClient;
+import com.winglog.user.internalcommunication.PhotoServiceClient;
 import com.winglog.user.model.UserProfile;
 import com.winglog.user.repository.UserProfileRepository;
 import com.winglog.user.service.UserService;
@@ -29,6 +30,9 @@ public class UserServiceTest {
 
     @Mock
     AuthServiceClient authServiceClient;
+
+    @Mock
+    PhotoServiceClient photoServiceClient;
 
     @InjectMocks
     UserService userService; // Riktig service, får in den fejkade repot /EF
@@ -193,6 +197,7 @@ public class UserServiceTest {
         userService.deleteAccount(userId);
         verify(profileRepository, times(1)).deleteByUserId(userId);
         verify(authServiceClient, times(1)).deleteUser(userId);
+        verify(photoServiceClient, times(1)).deleteAllByUserId(userId);
     }
 
     @Test

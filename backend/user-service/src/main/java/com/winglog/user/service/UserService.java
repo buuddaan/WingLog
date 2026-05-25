@@ -4,6 +4,7 @@ import com.winglog.user.dto.request.CreateProfileRequest;
 import com.winglog.user.dto.request.UpdateProfileRequest;
 import com.winglog.user.dto.response.UserProfileResponse;
 import com.winglog.user.internalcommunication.AuthServiceClient;
+import com.winglog.user.internalcommunication.PhotoServiceClient;
 import com.winglog.user.model.UserProfile;
 import com.winglog.user.repository.UserProfileRepository;
 import org.springframework.http.HttpStatus;
@@ -17,10 +18,12 @@ import java.util.UUID;
 public class UserService {
     private final UserProfileRepository profileRepository;
     private final AuthServiceClient authServiceClient;
+    private final PhotoServiceClient photoServiceClient;
 
-    public UserService(UserProfileRepository profileRepository, AuthServiceClient authServiceClient) {
+    public UserService(UserProfileRepository profileRepository, AuthServiceClient authServiceClient, PhotoServiceClient photoServiceClient) {
         this.profileRepository = profileRepository;
         this.authServiceClient = authServiceClient;
+        this.photoServiceClient = photoServiceClient;
     }
 
     // Hämtar den inloggade användarens egen profil /EF
@@ -83,6 +86,7 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Profil hittades inte");
         }
         profileRepository.deleteByUserId(userId);
+        photoServiceClient.deleteAllByUserId(userId);
         authServiceClient.deleteUser(userId);
     }
 }
