@@ -480,17 +480,6 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ),
 
-          // Stängkryss för kameran om man helt vill lämna skärmen
-          if (sessionImages.isEmpty)
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 16,
-              right: 16,
-              child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 32),
-                onPressed: () => Navigator.pop(context), // Stänger hela kameran
-              ),
-            ),
-
           // 4. BOTTENMENY
           Positioned(
             left: 16,
