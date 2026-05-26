@@ -43,11 +43,6 @@ class PermissionDeniedView extends StatelessWidget {
                 openAppSettings();
               },
             ),
-            const SizedBox(height: AppSpacing.md),
-            TextButton(
-              onPressed: onRetry,
-              child: const Text('Jag har ändrat, försök igen', style: TextStyle(color: Colors.white)),
-            ),
           ],
         ),
       ),
