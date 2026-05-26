@@ -4,15 +4,16 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../core/resources/api_config.dart';
 import '../design_system/molecules/camera_bottom_controls.dart';
 import '../design_system/molecules/camera_flow_bottom_bar.dart';
 import '../design_system/molecules/selection_action_row.dart';
 import '../design_system/molecules/loading_overlay.dart';
+import '../design_system/molecules/permission_denied_view.dart';
 import '../services/token_service.dart';
 
-// RAM-vänlig SessionImage för mobilen (inga bytes!)
 class SessionImage {
   final XFile file;
   final String imageId;
@@ -32,37 +33,107 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> {
+// 1. LÄGG TILL WidgetsBindingObserver HÄR
+class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
   late CameraController controller;
   bool isCameraReady = false;
   bool isTakingPicture = false;
   bool isFlashOn = false;
 
-  List<SessionImage> sessionImages = [];
+  bool _hasPermission = false;
+  bool _isCheckingPermission = true;
+  String? _cameraError;
 
-  // MULTI-SELECT är tillbaka från webbversionen!
+  List<CameraDescription> _localCameras = [];
+  List<SessionImage> sessionImages = [];
   Set<int> selectedIndices = {};
 
   bool isLoading = false;
   bool isViewingImage = false;
   final String sessionId = const Uuid().v4();
-
   final String _baseUrl = ApiConfig.baseUrl;
 
   @override
   void initState() {
     super.initState();
-    if (widget.cameras.isEmpty) {
-      debugPrint("Inga kameror hittades.");
-      return;
+    // 2. SÄG TILL FLUTTER ATT LYSSNA PÅ APPENS STATUS
+    WidgetsBinding.instance.addObserver(this);
+
+    _localCameras = widget.cameras;
+    _checkPermissionAndInit();
+  }
+
+  @override
+  void dispose() {
+    // 3. SLUTA LYSSNA NÄR SKÄRMEN STÄNGS
+    WidgetsBinding.instance.removeObserver(this);
+    if (isCameraReady) {
+      controller.dispose();
     }
-    _initCamera(widget.cameras.first);
+    super.dispose();
+  }
+
+  // 4. DENNA KÖRS AUTOMATISKT NÄR DU KOMMER TILLBAKA FRÅN INSTÄLLNINGAR
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (!_hasPermission) {
+        _checkPermissionAndInit(); // Kolla automatiskt igen!
+      }
+    }
+  }
+
+  Future<void> _checkPermissionAndInit() async {
+    if (!mounted) return;
+    setState(() => _isCheckingPermission = true);
+
+    // 1. VIKTIGT: Vi ropar request() direkt!
+    // Detta tvingar paketet att läsa den absolut senaste systemstatusen.
+    // Har användaren redan valt i inställningar visas ingen popup, vi får bara svaret.
+    final status = await Permission.camera.request();
+
+    if (!mounted) return;
+
+    if (status.isGranted) {
+      // Om vi nu har tillåtelse men saknar kameror i minnet, hämta dem!
+      if (_localCameras.isEmpty) {
+        try {
+          _localCameras = await availableCameras();
+        } catch (e) {
+          debugPrint("Kunde inte hämta kameror: $e");
+        }
+      }
+
+      if (_localCameras.isNotEmpty) {
+        setState(() {
+          _hasPermission = true;
+          _isCheckingPermission = false;
+        });
+
+        // Starta linsen om den inte redan är igång
+        if (!isCameraReady) {
+          _initCamera(_localCameras.first);
+        }
+      } else {
+        setState(() {
+          _hasPermission = true;
+          _isCheckingPermission = false;
+          _cameraError = "Ingen kamerahårdvara hittades. Kör du på en simulator?";
+        });
+      }
+    } else {
+      // Om den fortfarande är blockerad i inställningar
+      setState(() {
+        _hasPermission = false;
+        _isCheckingPermission = false;
+      });
+    }
   }
 
   Future<void> _initCamera(CameraDescription cameraInfo) async {
     controller = CameraController(
       cameraInfo,
-      ResolutionPreset.high, // Bäst för mobil
+      ResolutionPreset.high,
       enableAudio: false,
     );
 
@@ -71,27 +142,24 @@ class _CameraScreenState extends State<CameraScreen> {
       if (!mounted) return;
       setState(() {
         isCameraReady = true;
+        _cameraError = null;
       });
     } catch (e) {
       debugPrint("Kamerafel: $e");
+      if (mounted) {
+        setState(() {
+          _cameraError = e.toString();
+        });
+      }
     }
   }
 
-  @override
-  void dispose() {
-    if (isCameraReady) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
-
-  // --- KAMERAKONTROLLER ---
   void _switchCamera() async {
-    if (widget.cameras.length < 2) return;
+    if (_localCameras.length < 2) return;
     final currentDirection = controller.description.lensDirection;
-    final newCamera = widget.cameras.firstWhere(
+    final newCamera = _localCameras.firstWhere(
           (c) => c.lensDirection != currentDirection,
-      orElse: () => widget.cameras.first,
+      orElse: () => _localCameras.first,
     );
 
     setState(() => isCameraReady = false);
@@ -109,7 +177,6 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  // --- SELEKTION ---
   void _toggleSelection(int index) {
     setState(() {
       if (selectedIndices.contains(index)) {
@@ -124,7 +191,6 @@ class _CameraScreenState extends State<CameraScreen> {
     });
   }
 
-  // --- NÄTVERK & API ---
   Future<void> _takePicture() async {
     if (!isCameraReady || isTakingPicture) return;
 
@@ -160,7 +226,6 @@ class _CameraScreenState extends State<CameraScreen> {
       request.fields['sessionId'] = sessionId;
       request.fields['date'] = now;
 
-      // KÖR DIREKT FRÅN PATH (Sparar RAM!)
       request.files.add(await http.MultipartFile.fromPath('file', image.path));
 
       final streamed = await request.send();
@@ -212,7 +277,6 @@ class _CameraScreenState extends State<CameraScreen> {
       var request = http.MultipartRequest('POST', Uri.parse('$_baseUrl/photos/identify'));
       request.headers['Authorization'] = 'Bearer $token';
 
-      // Lägger till alla markerade bilder via deras fil-paths
       for (int index in selectedIndices) {
         final image = sessionImages[index].file;
         request.files.add(await http.MultipartFile.fromPath('file', image.path));
@@ -303,7 +367,6 @@ class _CameraScreenState extends State<CameraScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Sparad i mappen "$folderName"')),
         );
-        // Återgår till live-kameran (Web-beteendet)
         setState(() {
           sessionImages.clear();
           selectedIndices.clear();
@@ -331,7 +394,6 @@ class _CameraScreenState extends State<CameraScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Bilder sparade som oidentifierade')),
         );
-        // Återgår till live-kameran (Web-beteendet)
         setState(() {
           sessionImages.clear();
           selectedIndices.clear();
@@ -375,7 +437,6 @@ class _CameraScreenState extends State<CameraScreen> {
     if (shouldDelete == true) {
       await _deleteSession();
       if (mounted) {
-        // Nollställer appen (Web-beteendet)
         setState(() {
           sessionImages.clear();
           selectedIndices.clear();
@@ -399,6 +460,46 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isCheckingPermission) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: LoadingOverlay(),
+      );
+    }
+
+    if (!_hasPermission) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: PermissionDeniedView(
+          title: 'Kameraåtkomst saknas',
+          description: 'WingLog behöver tillgång till kameran för att du ska kunna fota och identifiera fåglar.',
+          icon: Icons.camera_alt_outlined,
+          onRetry: _checkPermissionAndInit,
+        ),
+      );
+    }
+
+    if (_cameraError != null) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 60),
+                const SizedBox(height: 16),
+                const Text('Kameran kunde inte startas:', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text(_cameraError!, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     if (!isCameraReady) {
       return const Scaffold(
         backgroundColor: Colors.black,
@@ -410,12 +511,10 @@ class _CameraScreenState extends State<CameraScreen> {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // 1. BAKGRUND: Kameran
           Positioned.fill(
             child: CameraPreview(controller),
           ),
 
-          // 1B. VALD BILD OVANPÅ: Ritas ut ovanpå kameran om en bild är klickad
           if (isViewingImage && selectedIndices.isNotEmpty)
             Positioned.fill(
               child: Image.file(
@@ -424,7 +523,6 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ),
 
-          // 2. TOPP: Lista med tumnaglar
           if (sessionImages.isNotEmpty)
             Positioned(
               top: MediaQuery.of(context).padding.top + 12,
@@ -464,7 +562,6 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ),
 
-          // 3. MELLAN: De flygande knapparna för radering/tillbaka (multi-select)
           if (isViewingImage && selectedIndices.isNotEmpty)
             Positioned(
               bottom: 120,
@@ -480,7 +577,6 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ),
 
-          // 4. BOTTENMENY
           Positioned(
             left: 16,
             right: 16,
@@ -501,7 +597,6 @@ class _CameraScreenState extends State<CameraScreen> {
             ),
           ),
 
-          // 5. LADDNING
           if (isLoading) const LoadingOverlay(),
         ],
       ),

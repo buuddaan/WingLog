@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:convert';
-//import 'package:flutter/cupertino.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/design_system/molecules/animated_mic_button.dart';
 import 'package:frontend/design_system/molecules/section_header.dart';
@@ -12,55 +11,61 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:http/http.dart' as http;
 import 'package:frontend/design_system/atoms/app_gradient_background.dart';
 
+// --- NYA IMPORTER ---
+import 'package:permission_handler/permission_handler.dart';
+import '../design_system/molecules/permission_denied_view.dart';
+import '../design_system/molecules/loading_overlay.dart';
+
 import '../core/resources/api_config.dart';
 import '../services/token_service.dart';
 
-class SoundRecordingScreen extends StatelessWidget{
-    const SoundRecordingScreen ({super.key});
+class SoundRecordingScreen extends StatelessWidget {
+  const SoundRecordingScreen({super.key});
 
-    @override
-    Widget build (BuildContext context) {
-        return Scaffold(
-          backgroundColor: Colors.transparent,
-            body: AppGradientBackground( //här har vi molekyl app_gradient_background
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SectionHeader(title: "Spela in ljud", //här har vi molekylen section_header
-                      centerTitle: true,
-                      trailing: IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.settings_outlined),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: AppGradientBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionHeader(
+                  title: "Spela in ljud",
+                  centerTitle: true,
+                  trailing: IconButton(
+                    onPressed: () {},
+                    icon: const Icon(Icons.settings_outlined),
                   ),
                 ),
-
                 const Spacer(),
                 Center(
                   child: AnimatedMicButton(
                     isListening: false,
-                    onTap: (){
-                        Navigator.push(
-                            context,
-                           MaterialPageRoute(
-                               builder: (context) => const ListeningScreen(),
-                           ),
-                        );
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ListeningScreen(),
+                        ),
+                      );
                     },
                   ),
                 ),
-              const Spacer(),
-           ],
+                const Spacer(),
+              ],
+            ),
           ),
-         ),
         ),
       ),
-     );
+    );
   }
 }
 
+// 1. LÄGG TILL WidgetsBindingObserver
 class ListeningScreen extends StatefulWidget {
   const ListeningScreen({super.key});
 
@@ -68,19 +73,73 @@ class ListeningScreen extends StatefulWidget {
   State<ListeningScreen> createState() => _ListeningScreenState();
 }
 
-class _ListeningScreenState extends State<ListeningScreen> {
+class _ListeningScreenState extends State<ListeningScreen> with WidgetsBindingObserver {
   final AudioRecorder _audioRecorder = AudioRecorder();
   String _status = 'Startar inspelning...';
+
+  // State-variabler för behörigheter (precis som kameran)
+  bool _hasPermission = false;
+  bool _isCheckingPermission = true;
 
   @override
   void initState() {
     super.initState();
-    _startRecordingFlow();
+    // Börja lyssna på system-events (när man byter mellan app och inställningar)
+    WidgetsBinding.instance.addObserver(this);
+
+    // Fråga direkt vid uppstart!
+    _checkPermissionAndInit();
   }
 
+  @override
+  void dispose() {
+    // Sluta lyssna när vi lämnar skärmen
+    WidgetsBinding.instance.removeObserver(this);
+    _audioRecorder.dispose();
+    super.dispose();
+  }
+
+  // 2. KÖRS AUTOMATISKT NÄR DU KOMMER TILLBAKA FRÅN INSTÄLLNINGAR
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (!_hasPermission) {
+        _checkPermissionAndInit(); // Kolla automatiskt igen!
+      }
+    }
+  }
+
+  // 3. FRÅGA OCH HANTERA BEHÖRIGHET (Precis som kameran)
+  Future<void> _checkPermissionAndInit() async {
+    if (!mounted) return;
+    setState(() => _isCheckingPermission = true);
+
+    // Ropa request() direkt! Tvingar fram det sanna svaret från iOS.
+    final status = await Permission.microphone.request();
+
+    if (!mounted) return;
+
+    if (status.isGranted) {
+      setState(() {
+        _hasPermission = true;
+        _isCheckingPermission = false;
+      });
+      // Behörighet godkänd - starta själva ljudinspelningen!
+      _startRecordingFlow();
+    } else {
+      // Om blockerad, visa vår PermissionDeniedView
+      setState(() {
+        _hasPermission = false;
+        _isCheckingPermission = false;
+      });
+    }
+  }
+
+  // 4. SJÄLVA INSPELNINGSFLÖDET (Körs enbart om vi har tillåtelse)
   Future<void> _startRecordingFlow() async {
     await _startRecording();
 
+    // Spelar in i 5 sekunder
     await Future.delayed(const Duration(seconds: 5));
 
     final path = await _stopRecording();
@@ -91,7 +150,6 @@ class _ListeningScreenState extends State<ListeningScreen> {
 
     if (path != null) {
       try {
-        // Detta skapar: http://DIN-IP:8080/gateway/audio/identify
         final token = await TokenService.getToken();
         final uri = Uri.parse('${ApiConfig.baseUrl}/audio/identify');
         final request = http.MultipartRequest('POST', uri);
@@ -99,14 +157,16 @@ class _ListeningScreenState extends State<ListeningScreen> {
 
         if (kIsWeb) {
           final response = await http.get(Uri.parse(path));
-          request.files.add(http.MultipartFile.fromBytes(
-            'file',
-            response.bodyBytes,
-            filename: 'recording.m4a',
-          ),
+          request.files.add(
+            http.MultipartFile.fromBytes(
+              'file',
+              response.bodyBytes,
+              filename: 'recording.m4a',
+            ),
           );
         } else {
-          request.files.add(await http.MultipartFile.fromPath('file', path),
+          request.files.add(
+            await http.MultipartFile.fromPath('file', path),
           );
         }
 
@@ -132,23 +192,13 @@ class _ListeningScreenState extends State<ListeningScreen> {
 
   Future<void> _startRecording() async {
     try {
-      final hasPermission = await _audioRecorder.hasPermission();
-
-      if (!hasPermission) {
-        setState(() {
-          _status = 'Mikrofonbehörighet nekad';
-        });
-        return;
-      }
-
       late final String filePath;
 
       if (kIsWeb) {
         filePath = 'bird_sound_${DateTime.now().millisecondsSinceEpoch}.m4a';
       } else {
         final Directory appDir = await getApplicationDocumentsDirectory();
-        filePath =
-        '${appDir.path}/bird_sound_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        filePath = '${appDir.path}/bird_sound_${DateTime.now().millisecondsSinceEpoch}.m4a';
       }
 
       await _audioRecorder.start(
@@ -162,7 +212,7 @@ class _ListeningScreenState extends State<ListeningScreen> {
       );
 
       setState(() {
-      _status = 'Lyssnar...';
+        _status = 'Lyssnar...';
       });
     } catch (e) {
       setState(() {
@@ -183,45 +233,60 @@ class _ListeningScreenState extends State<ListeningScreen> {
   }
 
   @override
-  void dispose() {
-    _audioRecorder.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    // 1. Visar laddningshjul medan vi kollar behörighet
+    if (_isCheckingPermission) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: LoadingOverlay(),
+      );
+    }
+
+    // 2. Visar molekylen om vi saknar behörighet
+    if (!_hasPermission) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: AppGradientBackground(
+          child: PermissionDeniedView(
+            title: 'Mikrofon saknas',
+            description: 'WingLog behöver mikrofonen för att spela in och identifiera fågelsång.',
+            icon: Icons.mic_off_outlined,
+            onRetry: _checkPermissionAndInit, // Tvingar en manuell om-koll om de klickar
+          ),
+        ),
+      );
+    }
+
+    // 3. Om vi har tillåtelse, visa inspelningsanimationen
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: AppGradientBackground( //molekyl
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                children: [
-                  SectionHeader( //molekyl
-                    title: _status,
-                    centerTitle: true,
-                    trailing: IconButton(onPressed: () {},
-                     icon: const Icon(Icons.settings_outlined),
-                  ),
-              ),
-
-            Expanded(
-            child: Center(
-              child: AnimatedMicButton(
-                  isListening: true,
-                  onTap: () {},
+      body: AppGradientBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              children: [
+                SectionHeader(
+                  title: _status,
+                  centerTitle: true,
+                ),
+                Expanded(
+                  child: Center(
+                    child: AnimatedMicButton(
+                      isListening: true,
+                      onTap: () {},
                     ),
-                 ),
-               ),
-            ],
-           ),
-         ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 }
+
 class RecognitionResultScreen extends StatefulWidget {
   final String? recordedFilePath;
   final Map<String, dynamic>? birdResult;
@@ -278,7 +343,6 @@ class _RecognitionResultScreenState extends State<RecognitionResultScreen> {
         child: SafeArea(
           child: Stack(
             children: [
-              // HUVUDINNEHÅLLET
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: Column(
@@ -287,7 +351,6 @@ class _RecognitionResultScreenState extends State<RecognitionResultScreen> {
                       title: 'Resultat',
                       centerTitle: true,
                     ),
-
                     Expanded(
                       child: Center(
                         child: SingleChildScrollView(
@@ -304,14 +367,12 @@ class _RecognitionResultScreenState extends State<RecognitionResultScreen> {
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
-
                                 const SizedBox(height: 24),
                                 const Icon(
                                   Icons.flutter_dash,
                                   size: 120,
                                   color: Color(0xFF2D5A27),
                                 ),
-
                                 const SizedBox(height: 16),
                                 if (widget.birdResult?['suggestions'] != null) ...[
                                   ...(widget.birdResult!['suggestions'] as List).map((s) {
@@ -343,17 +404,13 @@ class _RecognitionResultScreenState extends State<RecognitionResultScreen> {
                                     'Kunde inte identifiera fågeln.',
                                     textAlign: TextAlign.center,
                                   ),
-
                                 const SizedBox(height: 20),
                                 if (widget.recordedFilePath != null)
                                   Text(
                                     'Inspelad fil:\n${widget.recordedFilePath}',
                                     textAlign: TextAlign.center,
                                   ),
-
                                 const SizedBox(height: 32),
-
-                                // Endast Spela upp-knappen är kvar här i botten
                                 ElevatedButton.icon(
                                   onPressed: _isPlaying ? _stopPlayback : _playRecording,
                                   icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
@@ -368,26 +425,23 @@ class _RecognitionResultScreenState extends State<RecognitionResultScreen> {
                   ],
                 ),
               ),
-
-              // NYTT: PERMANENT TILLBAKAPIL MED SVART BAKGRUND
               Positioned(
                 top: AppSpacing.sm,
                 left: AppSpacing.sm,
                 child: Container(
                   decoration: const BoxDecoration(
-                    color: Colors.black54, // Halvgenomskinlig svart
-                    shape: BoxShape.circle, // Perfekt rund
+                    color: Colors.black54,
+                    shape: BoxShape.circle,
                   ),
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () {
-                      if (_isPlaying) _player.stop(); // Stoppar ljudet om det spelas
-                      Navigator.pop(context); // Går tillbaka
+                      if (_isPlaying) _player.stop();
+                      Navigator.pop(context);
                     },
                   ),
                 ),
               ),
-
             ],
           ),
         ),
