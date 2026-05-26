@@ -2,22 +2,43 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  // Byt ut detta mot den PUBLIKA IP-adressen till din SSH-server
-  static const String _serverIp = '65.21.190.58';
+  // ===================================================================
+  // STRÖMBRYTAREN:
+  // Ändra till 'true' när du kodar lokalt mot Docker på din Mac.
+  // Ändra till 'false' när du vill bygga/testa mot den skarpa servern!
+  // ===================================================================
+  static const bool useLocalBackend = true;
+
+  // Din live-server på nätet
+  static const String _productionIp = '65.21.190.58';
+
+  // Din Macs lokala IP på nätverket (byt om du byter Wi-Fi)
+  static const String _macLocalIp = '10.200.47.121';
 
   static String get baseUrl {
-    // Webbläsaren (Chrome) körs på datorn och hittar din backend via localhost.
-    if (kIsWeb) {
-      return 'http://65.21.190.58:8080/gateway';
-    }
-    // Android-emulatorer har en inbyggd spärr och måste använda en special-adress
-    // (10.0.2.2) för att hitta värddatorns localhost.
-    else if (Platform.isAndroid) {
-      return 'http://10.0.2.2:8080/gateway';
-    }
-    // telefoner är egna datorer på nätverket och måste peka på din dators IP.
-    else {
-      return 'http://$_serverIp:8080/gateway';
+    if (!useLocalBackend) {
+      // ---------------------------------------------------
+      // SKARPT LÄGE: Alla enheter pekar på live-servern
+      // ---------------------------------------------------
+      return 'http://$_productionIp:8080/gateway';
+    } else {
+      // ---------------------------------------------------
+      // LOKALT LÄGE: Appen letar efter Docker på din Mac
+      // ---------------------------------------------------
+      if (kIsWeb) {
+        // Chrome på Macen hittar Docker direkt på localhost
+        return 'http://localhost:8080/gateway';
+      }
+      else if (Platform.isAndroid) {
+        // Android-emulatorns inbyggda magiska adress för att nå Macen
+        return 'http://10.0.2.2:8080/gateway';
+      }
+      else {
+        // För fysisk iPhone OCH iOS-simulatorn.
+        // Vi använder din lokala IP här så att det funkar om du
+        // pluggar in telefonen med sladd också!
+        return 'http://$_macLocalIp:8080/gateway';
+      }
     }
   }
 }
