@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/screens/login_test_screen.dart';
 import '../core/theme/app_gradients.dart';
 import 'map_screen.dart';
 import 'camera_screen.dart';
@@ -8,6 +7,7 @@ import 'sound_recording_screen.dart';
 import 'gallery_screen.dart';
 import 'profile_screen.dart'; // Vår nya profilsida!
 import '../design_system/organisms/app_bottom_nav.dart';
+
 
 class MainLayout extends StatefulWidget {
   final VoidCallback onLogout;
@@ -27,7 +27,6 @@ class _MainLayoutState extends State<MainLayout> {
     CameraScreen(cameras: cameras), // Index 1: Kamera
     const GalleryScreen(),          // Index 2: Galleri
     const SoundRecordingScreen(),   // Index 3: Spela in ljud
-    const LoginTypographyPreview(), // Index 4: TrueLogin
   ];
 
   @override

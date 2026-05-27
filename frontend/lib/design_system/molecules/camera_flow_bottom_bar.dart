@@ -2,19 +2,23 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class CameraFlowBottomBar extends StatelessWidget {
-  final VoidCallback? onCancel;
-  final VoidCallback? onIdentify;
+  final VoidCallback? onBack;
   final VoidCallback? onSave;
-  final bool isIdentifyEnabled;
+  final VoidCallback? onIdentify;
+  final VoidCallback? onDelete;
   final bool isSaveEnabled;
+  final bool isIdentifyEnabled;
+  final bool isDeleteEnabled;
 
   const CameraFlowBottomBar({
     super.key,
-    this.onCancel,
-    this.onIdentify,
+    this.onBack,
     this.onSave,
-    this.isIdentifyEnabled = true,
+    this.onIdentify,
+    this.onDelete,
     this.isSaveEnabled = true,
+    this.isIdentifyEnabled = true,
+    this.isDeleteEnabled = true,
   });
 
   @override
@@ -37,9 +41,14 @@ class CameraFlowBottomBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _CameraFlowAction(
-                icon: Icons.close,
-                label: 'Avbryt',
-                onTap: onCancel,
+                icon: Icons.arrow_back,
+                label: 'Tillbaka',
+                onTap: onBack,
+              ),
+              _CameraFlowAction(
+                icon: Icons.save_alt_outlined,
+                label: 'Spara',
+                onTap: isSaveEnabled ? onSave : null,
               ),
               _CameraFlowAction(
                 icon: Icons.image_search,
@@ -48,9 +57,10 @@ class CameraFlowBottomBar extends StatelessWidget {
                 isPrimary: true,
               ),
               _CameraFlowAction(
-                icon: Icons.check,
-                label: 'Spara',
-                onTap: isSaveEnabled ? onSave : null,
+                icon: Icons.delete_outline,
+                label: 'Radera',
+                onTap: isDeleteEnabled ? onDelete : null,
+                color: const Color(0xFFD03F3F),
               ),
             ],
           ),
@@ -65,18 +75,22 @@ class _CameraFlowAction extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
   final bool isPrimary;
+  final Color? color;
 
   const _CameraFlowAction({
     required this.icon,
     required this.label,
     required this.onTap,
     this.isPrimary = false,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     final isEnabled = onTap != null;
-    final color = isEnabled ? Colors.white : Colors.white38;
+    final resolvedColor = isEnabled
+        ? (color ?? Colors.white)
+        : (color ?? Colors.white).withValues(alpha: 0.38);
 
     return Expanded(
       child: Material(
@@ -91,14 +105,14 @@ class _CameraFlowAction extends StatelessWidget {
               children: [
                 Icon(
                   icon,
-                  color: color,
+                  color: resolvedColor,
                   size: isPrimary ? 24 : 22,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   label,
                   style: TextStyle(
-                    color: color,
+                    color: resolvedColor,
                     fontSize: 12,
                     fontWeight: isPrimary ? FontWeight.w600 : FontWeight.w500,
                   ),

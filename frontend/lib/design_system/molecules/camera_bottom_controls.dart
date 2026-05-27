@@ -1,30 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/design_system/atoms/camera_icon_button.dart';
 import 'package:frontend/design_system/atoms/camera_shutter_button.dart';
-import 'package:frontend/core/theme/app_spacing.dart';
 
 class CameraBottomControls extends StatelessWidget {
-  final VoidCallback? onGalleryPressed;
+  final VoidCallback? onCancelSessionPressed;
   final VoidCallback? onShutterPressed;
+  final VoidCallback? onSaveSessionPressed;
   final VoidCallback? onSwitchCameraPressed;
   final bool isCaptureEnabled;
-  final bool isLeftActive;
-  final bool isRightActive;
-  final IconData leftIcon;
-  final IconData rightIcon;
+  final bool isSessionActionEnabled;
   final EdgeInsetsGeometry? padding;
 
   const CameraBottomControls({
     super.key,
-    required this.onGalleryPressed,
+    required this.onCancelSessionPressed,
     required this.onShutterPressed,
+    required this.onSaveSessionPressed,
     required this.onSwitchCameraPressed,
     this.isCaptureEnabled = true,
-    this.isLeftActive = true,
-    this.isRightActive = true,
-    this.leftIcon = Icons.photo_library_outlined,
-    this.rightIcon = Icons.cameraswitch_outlined,
+    this.isSessionActionEnabled = true,
     this.padding,
   });
 
@@ -32,27 +28,30 @@ class CameraBottomControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: padding ??
-        const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
-        ),
+          const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          CameraIconButton(
-            icon: isLeftActive ? Icons.flash_on : Icons.flash_off,
-            isActive: isLeftActive,
-            onPressed: onGalleryPressed,
-            backgroundColor: AppColors.cameraOverlayButton,
-            activeBackgroundColor: AppColors.cameraOverlayButton,
-            borderColor: Colors.white,
-            iconColor: Colors.white,
-            activeIconColor: Colors.white,
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: CameraIconButton(
+                icon: Icons.close,
+                  onPressed:
+                    isSessionActionEnabled ? onCancelSessionPressed : null,
+                backgroundColor: AppColors.cameraOverlayButton,
+                activeBackgroundColor: AppColors.cameraOverlayButton,
+                borderColor: Colors.white,
+                iconColor: Colors.white,
+                activeIconColor: Colors.white,
+              ),
+            ),
           ),
 
           const SizedBox(width: AppSpacing.xl),
-
           CameraShutterButton(
             onPressed: onShutterPressed,
             isEnabled: isCaptureEnabled,
@@ -63,17 +62,35 @@ class CameraBottomControls extends StatelessWidget {
 
           const SizedBox(width: AppSpacing.xl),
 
-          CameraIconButton(
-            icon: Icons.refresh,
-            onPressed: onSwitchCameraPressed,
-            backgroundColor: AppColors.cameraOverlayButton,
-            activeIconColor: AppColors.cameraOverlayButton,
-            borderColor: Colors.white,
-            iconColor: Colors.white,
-            activeBackgroundColor: Colors.white,
+          Expanded(
+              child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            CameraIconButton(
+              icon: Icons.cameraswitch_outlined,
+              onPressed: onSwitchCameraPressed,
+              backgroundColor: AppColors.cameraOverlayButton,
+              activeBackgroundColor: AppColors.cameraOverlayButton,
+              borderColor: Colors.white,
+              iconColor: Colors.white,
+              activeIconColor: Colors.white,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            CameraIconButton(
+              icon: Icons.save_alt_outlined,
+              onPressed:
+              isSessionActionEnabled ? onSaveSessionPressed : null,
+              backgroundColor: AppColors.cameraOverlayButton,
+              activeBackgroundColor: AppColors.cameraOverlayButton,
+              borderColor: Colors.white,
+              iconColor: Colors.white,
+              activeIconColor: Colors.white,
           ),
-        ],
-      ),
+         ],
+        ),
+       ),
+     ],
+    ),
     );
   }
 }

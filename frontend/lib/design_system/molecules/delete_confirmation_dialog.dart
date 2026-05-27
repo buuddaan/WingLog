@@ -64,15 +64,18 @@ class DeleteConfirmationDialog extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Expanded(
+                SizedBox(
+                  width: 110,
                   child: NeutralButton.medium(
                     text: cancelText,
                     onPressed: onCancelPressed,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Expanded(
+                SizedBox(
+                  width: 110,
                   child: DangerButton.medium(
                     text: confirmText,
                     onPressed: onConfirmPressed,
