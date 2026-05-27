@@ -91,6 +91,18 @@ public class PhotoController {
         photoService.deleteImage(imageId, userId);
         return ResponseEntity.noContent().build();
     }
+    @PutMapping("/move-image")
+    public ResponseEntity<Void> moveImage(
+            HttpServletRequest request,
+            @RequestParam("imageId") UUID imageId,
+            @RequestParam("newFolderName") String newFolderName) {
+
+        UUID userId = UUID.fromString((String) request.getAttribute(UserIdFilter.USER_ID_ATTRIBUTE));
+        // Du behöver skapa denna metod i din PhotoService!
+        photoService.moveImageToFolder(imageId, userId, newFolderName);
+
+        return ResponseEntity.ok().build();
+    }
 
     @PutMapping("/rename-folder")
     public ResponseEntity<Void> renameFolder(
