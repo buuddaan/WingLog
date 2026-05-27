@@ -113,7 +113,8 @@ public class RoutingController {
 
         // OBS: Nu kallar gateway på auth, auth anropar microservice. Detta är inte korrekt
         // Auth ska istället för att anropa ms bara bekräfta autenisering eller ej tillbaka till gateway som efter detta anropar korrekt service
-        return requestSpec.retrieve().toEntity(byte[].class);
+        ResponseEntity<byte[]> r = requestSpec.retrieve().toEntity(byte[].class);
+        return ResponseEntity.status(r.getStatusCode()).body(r.getBody());
     }
 
     private String resolveTargetUrl(String path) {

@@ -14,7 +14,7 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("http://localhost", "http://localhost:*", "http://65.21.190.58"));
+        config.setAllowedOriginPatterns(List.of("http://localhost", "http://localhost:*", "http://65.21.190.58", "https://winglog.duckdns.org", "http://10.0.2.2:*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

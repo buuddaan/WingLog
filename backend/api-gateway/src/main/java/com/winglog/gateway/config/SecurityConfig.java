@@ -48,7 +48,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
 
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
 
                 )
 

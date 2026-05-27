@@ -7,10 +7,7 @@ class ApiConfig {
   // Ändra till 'true' när du kodar lokalt mot Docker på din Mac.
   // Ändra till 'false' när du vill bygga/testa mot den skarpa servern!
   // ===================================================================
-  static const bool useLocalBackend = true;
-
-  // Din live-server på nätet
-  static const String _productionIp = '65.21.190.58';
+  static const bool useLocalBackend = false;
 
   // Din Macs lokala IP på nätverket (byt om du byter Wi-Fi)
   static const String _macLocalIp = '10.200.47.121';
@@ -20,7 +17,7 @@ class ApiConfig {
       // ---------------------------------------------------
       // SKARPT LÄGE: Alla enheter pekar på live-servern
       // ---------------------------------------------------
-      return 'http://$_productionIp:8080/gateway';
+      return 'https://winglog.duckdns.org/gateway';
     } else {
       // ---------------------------------------------------
       // LOKALT LÄGE: Appen letar efter Docker på din Mac
