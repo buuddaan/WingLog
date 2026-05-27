@@ -125,4 +125,15 @@ public class PhotoController {
         return ResponseEntity.noContent().build();
     }
 
+    // Lägg till i PhotoController.java
+    @DeleteMapping("/users/{userId}/all")
+    public ResponseEntity<Void> deleteAllUserPhotos(@PathVariable UUID userId) {
+        try {
+            photoService.deleteAllByUserId(userId);
+            return ResponseEntity.noContent().build();
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
 }
