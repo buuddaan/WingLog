@@ -133,6 +133,22 @@ public class PhotoService {
         }
     }
 
+    public void moveImageToFolder(UUID imageId, UUID userId, String newFolderName) {
+        // Hämtar bilden från din databas
+        BirdImage image = birdImageRepository.findById(imageId)
+                .orElseThrow(() -> new RuntimeException("Bilden hittades inte"));
+
+        // Extra säkerhetskoll: Se till att personen som flyttar bilden faktiskt äger den!
+        if (!image.getUserId().equals(userId)) {
+            throw new RuntimeException("Obehörig: Bilden tillhör inte denna användare");
+        }
+
+        // Uppdaterar mappnamnet
+        image.setFolderName(newFolderName);
+
+        // Sparar ändringen i databasen
+        birdImageRepository.save(image);
+    }
     /** Från Axel, Raderar alla bilder i en mapp**/
     @org.springframework.transaction.annotation.Transactional
     public void deleteFolder(String folderName, UUID userId) throws IOException {

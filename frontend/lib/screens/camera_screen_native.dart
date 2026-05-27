@@ -33,12 +33,17 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-// 1. LÄGG TILL WidgetsBindingObserver HÄR
 class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
   late CameraController controller;
   bool isCameraReady = false;
   bool isTakingPicture = false;
   bool isFlashOn = false;
+
+  // --- ZOOM-VARIABLER ---
+  double _currentZoomLevel = 1.0;
+  double _minAvailableZoom = 1.0;
+  double _maxAvailableZoom = 1.0;
+  double _baseZoomLevel = 1.0; // Används för att räkna ut skillnaden när man nyper
 
   bool _hasPermission = false;
   bool _isCheckingPermission = true;
@@ -56,7 +61,6 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   @override
   void initState() {
     super.initState();
-    // 2. SÄG TILL FLUTTER ATT LYSSNA PÅ APPENS STATUS
     WidgetsBinding.instance.addObserver(this);
 
     _localCameras = widget.cameras;
@@ -65,7 +69,6 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
   @override
   void dispose() {
-    // 3. SLUTA LYSSNA NÄR SKÄRMEN STÄNGS
     WidgetsBinding.instance.removeObserver(this);
     if (isCameraReady) {
       controller.dispose();
@@ -73,12 +76,11 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     super.dispose();
   }
 
-  // 4. DENNA KÖRS AUTOMATISKT NÄR DU KOMMER TILLBAKA FRÅN INSTÄLLNINGAR
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       if (!_hasPermission) {
-        _checkPermissionAndInit(); // Kolla automatiskt igen!
+        _checkPermissionAndInit();
       }
     }
   }
@@ -87,15 +89,11 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     if (!mounted) return;
     setState(() => _isCheckingPermission = true);
 
-    // 1. VIKTIGT: Vi ropar request() direkt!
-    // Detta tvingar paketet att läsa den absolut senaste systemstatusen.
-    // Har användaren redan valt i inställningar visas ingen popup, vi får bara svaret.
     final status = await Permission.camera.request();
 
     if (!mounted) return;
 
     if (status.isGranted) {
-      // Om vi nu har tillåtelse men saknar kameror i minnet, hämta dem!
       if (_localCameras.isEmpty) {
         try {
           _localCameras = await availableCameras();
@@ -110,7 +108,6 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
           _isCheckingPermission = false;
         });
 
-        // Starta linsen om den inte redan är igång
         if (!isCameraReady) {
           _initCamera(_localCameras.first);
         }
@@ -122,7 +119,6 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         });
       }
     } else {
-      // Om den fortfarande är blockerad i inställningar
       setState(() {
         _hasPermission = false;
         _isCheckingPermission = false;
@@ -139,6 +135,12 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
     try {
       await controller.initialize();
+
+      // --- HÄMTA TELEFONENS MAX/MIN ZOOM ---
+      _maxAvailableZoom = await controller.getMaxZoomLevel();
+      _minAvailableZoom = await controller.getMinZoomLevel();
+      _currentZoomLevel = _minAvailableZoom;
+
       if (!mounted) return;
       setState(() {
         isCameraReady = true;
@@ -511,8 +513,31 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
+          // --- GESTURE DETECTOR FÖR PINCH-TO-ZOOM ---
           Positioned.fill(
-            child: CameraPreview(controller),
+            child: GestureDetector(
+              onScaleStart: (details) {
+                // Sparar startläget för zoomen
+                _baseZoomLevel = _currentZoomLevel;
+              },
+              onScaleUpdate: (details) async {
+                if (!isCameraReady) return;
+
+                // Räkna ut ny zoom
+                double newZoom = _baseZoomLevel * details.scale;
+
+                // Tvinga värdet att stanna inom kamerans max/min
+                newZoom = newZoom.clamp(_minAvailableZoom, _maxAvailableZoom);
+
+                if (newZoom != _currentZoomLevel) {
+                  setState(() {
+                    _currentZoomLevel = newZoom;
+                  });
+                  await controller.setZoomLevel(_currentZoomLevel);
+                }
+              },
+              child: CameraPreview(controller),
+            ),
           ),
 
           if (isViewingImage && selectedIndices.isNotEmpty)

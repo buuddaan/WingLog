@@ -286,10 +286,15 @@ class _FolderDetailsScreenState extends State<FolderDetailsScreen> {
                           MaterialPageRoute(
                             builder: (context) => SingleImageScreen(
                               imageUrl: photo.imageUrl,
-                              birdSpecies: _currentFolderName, // Skicka med namnet om vi vill visa det
+                              birdSpecies: _currentFolderName,
+                              imageId: photo.id, // <-- NYTT: Skickar med bildens ID till SingleImageScreen
                             ),
                           ),
-                        );
+                        ).then((_) {
+                          // <-- NYTT: När SingleImageScreen stängs (t.ex. efter bilden flyttats),
+                          // uppdaterar vi denna mapp så att den flyttade bilden försvinner från vyn!
+                          _refreshFolder();
+                        });
                       },
 
                       // Själva bilden

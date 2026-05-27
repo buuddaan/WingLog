@@ -13,7 +13,7 @@ class ApiConfig {
   static const String _productionIp = '65.21.190.58';
 
   // Din Macs lokala IP på nätverket (byt om du byter Wi-Fi)
-  static const String _macLocalIp = '10.200.47.121';
+  static const String _macLocalIp = '10.200.46.110';
 
   static String get baseUrl {
     if (!useLocalBackend) {
