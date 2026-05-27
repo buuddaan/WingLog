@@ -4,6 +4,7 @@ import '../core/theme/app_colors.dart';
 import '../core/theme/app_gradients.dart';
 import '../design_system/atoms/neutral_button.dart';
 import '../services/token_service.dart';
+import '../design_system/atoms/danger_button.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback onLogout;
@@ -79,8 +80,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 60),
 
             // Vi har flyttat utloggningsknappen hit från menyn!
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            IntrinsicWidth(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 NeutralButton.medium(
                   text: 'Logga ut',
@@ -89,7 +91,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     widget.onLogout();
                   },
                 ),
+                const SizedBox(height: 12),
+                DangerButton.medium(
+                  text: 'Radera konto',
+                  onPressed: () {
+                    // TODO: Lägg in delete account flow här
+                  },
+                ),
               ],
+            ),
             ),
           ],
         ),
