@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.net.http.HttpClient;
 
@@ -113,8 +114,12 @@ public class RoutingController {
 
         // OBS: Nu kallar gateway på auth, auth anropar microservice. Detta är inte korrekt
         // Auth ska istället för att anropa ms bara bekräfta autenisering eller ej tillbaka till gateway som efter detta anropar korrekt service
-        ResponseEntity<byte[]> r = requestSpec.retrieve().toEntity(byte[].class);
-        return ResponseEntity.status(r.getStatusCode()).body(r.getBody());
+        try {
+            ResponseEntity<byte[]> r = requestSpec.retrieve().toEntity(byte[].class);
+            return ResponseEntity.status(r.getStatusCode()).body(r.getBody());
+        } catch (RestClientResponseException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
+        }
     }
 
     private String resolveTargetUrl(String path) {
