@@ -1,3 +1,10 @@
+FROM ghcr.io/cirruslabs/flutter:stable AS builder
+WORKDIR /app
+COPY pubspec.yaml pubspec.lock ./
+RUN flutter pub get
+COPY . .
+RUN flutter build web --release
+
 FROM nginx:alpine
-COPY build/web /usr/share/nginx/html
+COPY --from=builder /app/build/web /usr/share/nginx/html
 EXPOSE 80

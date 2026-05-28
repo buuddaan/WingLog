@@ -83,6 +83,9 @@ class GeoService {
   static Future<void> deleteSighting(String id) async {
     final uri = Uri.parse('${ApiConfig.baseUrl}/sightings/$id');
     final response = await http.delete(uri, headers: await _authHeaders());
+    if (response.statusCode == 403) {
+      throw Exception('Du kan bara radera egna pins');
+    }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('Delete sighting failed: ${response.statusCode}');
     }
