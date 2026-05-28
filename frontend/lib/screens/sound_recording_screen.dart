@@ -114,6 +114,16 @@ class _ListeningScreenState extends State<ListeningScreen> with WidgetsBindingOb
     if (!mounted) return;
     setState(() => _isCheckingPermission = true);
 
+    if (kIsWeb) {
+      // Webb hanterar mikrofontillstånd via webbläsaren automatiskt
+      setState(() {
+        _hasPermission = true;
+        _isCheckingPermission = false;
+      });
+      _startRecordingFlow();
+      return;
+    }
+
     // Ropa request() direkt! Tvingar fram det sanna svaret från iOS.
     final status = await Permission.microphone.request();
 
