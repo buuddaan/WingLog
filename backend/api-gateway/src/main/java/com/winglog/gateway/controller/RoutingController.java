@@ -1,6 +1,7 @@
 package com.winglog.gateway.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.io.IOException;
 import java.net.http.HttpClient;
 
 @RestController
@@ -50,10 +52,11 @@ public class RoutingController {
 
     // Fångar upp ALLA requests under /gateway/**
     @RequestMapping("/**")
-    public ResponseEntity<byte[]> route(
+    public void route(
             HttpServletRequest request,
+            HttpServletResponse response,
             // Axel, byte[] istället för String för att klara av filer
-            @RequestBody(required = false) byte[] body) {
+            @RequestBody(required = false) byte[] body) throws IOException {
 
         String path = request.getRequestURI();
         String method = request.getMethod();
@@ -65,7 +68,8 @@ public class RoutingController {
         String targetUrl = resolveTargetUrl(path);
 
         if (targetUrl == null) {
-            return ResponseEntity.notFound().build();
+            response.setStatus(404);
+            return;
         }
 
         // NYTT: Klistra på parametrarna på url:en igen innan vi skickar vidare
@@ -116,9 +120,26 @@ public class RoutingController {
         // Auth ska istället för att anropa ms bara bekräfta autenisering eller ej tillbaka till gateway som efter detta anropar korrekt service
         try {
             ResponseEntity<byte[]> r = requestSpec.retrieve().toEntity(byte[].class);
-            return ResponseEntity.status(r.getStatusCode()).body(r.getBody());
+            response.setStatus(r.getStatusCode().value());
+            String upstreamContentType = r.getHeaders().getFirst("Content-Type");
+            if (upstreamContentType != null) {
+                response.setContentType(upstreamContentType);
+            }
+            byte[] responseBody = r.getBody();
+            if (responseBody != null) {
+                response.getOutputStream().write(responseBody);
+            }
         } catch (RestClientResponseException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
+            response.setStatus(e.getStatusCode().value());
+            String upstreamContentType = e.getResponseHeaders() != null
+                    ? e.getResponseHeaders().getFirst("Content-Type") : null;
+            if (upstreamContentType != null) {
+                response.setContentType(upstreamContentType);
+            }
+            byte[] errorBody = e.getResponseBodyAsByteArray();
+            if (errorBody != null) {
+                response.getOutputStream().write(errorBody);
+            }
         }
     }
 
