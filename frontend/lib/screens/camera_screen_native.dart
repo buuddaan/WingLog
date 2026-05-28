@@ -9,10 +9,11 @@ import 'package:permission_handler/permission_handler.dart';
 import '../core/resources/api_config.dart';
 import '../design_system/molecules/camera_bottom_controls.dart';
 import '../design_system/molecules/camera_flow_bottom_bar.dart';
-import '../design_system/molecules/selection_action_row.dart';
 import '../design_system/molecules/loading_overlay.dart';
 import '../design_system/molecules/permission_denied_view.dart';
 import '../services/token_service.dart';
+// import '../design_system/atoms/media_thumb.dart'; verkar som denna är skriven inline
+import '../design_system/molecules/delete_confirmation_dialog.dart';
 
 class SessionImage {
   final XFile file;
@@ -169,15 +170,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     _initCamera(newCamera);
   }
 
-  Future<void> _toggleFlash() async {
-    if (!isCameraReady) return;
-    try {
-      setState(() => isFlashOn = !isFlashOn);
-      await controller.setFlashMode(isFlashOn ? FlashMode.always : FlashMode.off);
-    } catch (e) {
-      debugPrint("Kunde inte ändra blixt: $e");
-    }
-  }
+  //Future<void> _toggleFlash() async { if (!isCameraReady) return;
+   // try { setState(() => isFlashOn = !isFlashOn);await controller.setFlashMode(isFlashOn ? FlashMode.always : FlashMode.off);
+   // } catch (e) { debugPrint("Kunde inte ändra blixt: $e"); }}  Vi vill väl ta bort blixt knappen?
 
   void _toggleSelection(int index) {
     setState(() {
@@ -376,7 +371,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         });
       }
     } catch (exception) {
-      debugPrint('Fel vid sparning: $exception');
+      debugPrint('Fel vid sparande: $exception');
     }
   }
 
@@ -458,6 +453,23 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     } catch (exception) {
       debugPrint('Fel vid radering av session: $exception');
     }
+  }
+
+  Future<void> _showDeleteDialog() async {  //pop up när man trycker på ta bort knapp i ta bild stateq
+    if (selectedIndices.isEmpty) return;
+
+    await showDialog(
+      context: context,
+      builder: (context) => DeleteConfirmationDialog(
+        title: 'Radera bild?',
+        description: 'Vill du ta bort denna bild?',
+        onCancelPressed: () => Navigator.of(context).pop(),
+        onConfirmPressed: () {
+          Navigator.of(context).pop();
+          _deleteSelectedImages();
+        },
+      ),
+    );
   }
 
   @override
@@ -587,38 +599,32 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
               ),
             ),
 
-          if (isViewingImage && selectedIndices.isNotEmpty)
-            Positioned(
-              bottom: 120,
-              left: 16,
-              right: 16,
-              child: SelectionActionRow(
-                onBack: () => setState(() {
-                  isViewingImage = false;
-                  selectedIndices.clear();
-                }),
-                onDelete: _deleteSelectedImages,
-                selectedCount: selectedIndices.length,
-              ),
-            ),
-
           Positioned(
             left: 16,
             right: 16,
             bottom: 40,
-            child: selectedIndices.isEmpty
+            child: !isViewingImage
                 ? CameraBottomControls(
-              onGalleryPressed: _toggleFlash,
+              onCancelSessionPressed:
+              sessionImages.isNotEmpty ? _onCancel : null,
               onShutterPressed: _takePicture,
               onSwitchCameraPressed: _switchCamera,
+              onSaveSessionPressed:
+              sessionImages.isNotEmpty ? _saveImage : null,
               isCaptureEnabled: !isTakingPicture,
-              isLeftActive: isFlashOn,
+              isSessionActionEnabled: sessionImages.isNotEmpty,
             )
                 : CameraFlowBottomBar(
-              onCancel: _onCancel,
-              onIdentify: _identifyBird,
-              onSave: _saveImage,
+              onBack: () => setState(() {
+                isViewingImage = false;
+                selectedIndices.clear();
+              }),
+              onSave: selectedIndices.isNotEmpty ? _saveImage : null,
+              onIdentify: selectedIndices.isNotEmpty ? _identifyBird : null,
+              onDelete: selectedIndices.isNotEmpty ? _showDeleteDialog: null,
+              isSaveEnabled: selectedIndices.isNotEmpty,
               isIdentifyEnabled: selectedIndices.isNotEmpty,
+              isDeleteEnabled: selectedIndices.isNotEmpty,
             ),
           ),
 
