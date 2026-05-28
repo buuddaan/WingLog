@@ -99,8 +99,9 @@ class _MapScreenState extends State<MapScreen> {
         await _loadSightings();
       } catch (e) {
         if (mounted) {
+          final msg = e.toString().replaceFirst('Exception: ', '');
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Kunde inte ta bort: $e')),
+            SnackBar(content: Text(msg)),
           );
         }
       }
