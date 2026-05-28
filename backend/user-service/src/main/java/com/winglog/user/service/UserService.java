@@ -82,25 +82,26 @@ public class UserService {
     // Raderar användarprofilen. Credentials raderas av auth-service separat /EF
     @Transactional
     public void deleteAccount(UUID userId) {
-        //Radera profilen
-        if (profileRepository.existsByUserId(userId)) {
-            profileRepository.deleteByUserId(userId);
+        // 1. KONTROLL: Måste finnas för att vi ska kunna radera
+        if (!profileRepository.existsByUserId(userId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Användaren hittades inte");
         }
 
-        // Radera bilder (utan exception som stoppar raderingen)
+        // 2. RADERA PROFIL
+        profileRepository.deleteByUserId(userId);
+
+        // 3. RADERA BILDER (Säkert anrop)
         try {
             photoServiceClient.deleteAllByUserId(userId);
         } catch (Exception e) {
-            // Logga felet men fortsätt
-            System.err.println("Kunde inte radera bilder: " + e.getMessage());
+            System.err.println("Kunde inte radera bilder (fortsätter ändå): " + e.getMessage());
         }
 
-        // Radera inloggning (utan att kasta exception som stoppar raderingen)
+        // 4. RADERA INLOGGNING (Säkert anrop)
         try {
             authServiceClient.deleteUser(userId);
         } catch (Exception e) {
-            // Logga felet men fortsätt
-            System.err.println("Kunde inte radera auth-user: " + e.getMessage());
+            System.err.println("Kunde inte radera auth-user (fortsätter ändå): " + e.getMessage());
         }
     }
 }
