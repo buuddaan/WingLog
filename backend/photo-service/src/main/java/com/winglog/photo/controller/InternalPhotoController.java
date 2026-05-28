@@ -15,7 +15,7 @@ import java.util.UUID;
 public class InternalPhotoController {
     private final PhotoService photoService;
 
-    @Value("${internal.secret}")
+    @Value("${INTERNAL_SECRET}")
     private String internalSecret;
 
     public InternalPhotoController(PhotoService photoService) {
@@ -24,7 +24,9 @@ public class InternalPhotoController {
 
     @DeleteMapping("/photos/{userId}")
     public ResponseEntity<Void> deleteAllByUserId(
-            @PathVariable UUID userId, @RequestHeader("X-Internal-Secret") String secret) throws IOException {
+            @PathVariable("userId") UUID userId,
+            @RequestHeader("X-Internal-Secret") String secret) throws IOException {
+
         if (!internalSecret.equals(secret)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

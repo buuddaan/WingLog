@@ -143,24 +143,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 60),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                NeutralButton.medium(
-                  text: 'Logga ut',
-                  onPressed: () {
-                    Navigator.pop(context);
-                    widget.onLogout(); // Loggar ut lokalt
-                  },
-                ),
-              ],
+            SizedBox(
+              width: 220, // Valfri fast bredd
+              child: NeutralButton.medium(
+                text: 'Logga ut',
+                onPressed: () {
+                  Navigator.pop(context);
+                  widget.onLogout();
+                },
+              ),
             ),
 
-            // --- NY: Radera-knappen! ---
             const SizedBox(height: AppSpacing.xl),
-            DangerButton.medium(
-              text: 'Radera konto',
-              onPressed: _showDeleteConfirmation,
+
+            SizedBox(
+              width: 220, // Samma fasta bredd
+              child: DangerButton.medium(
+                text: 'Radera konto',
+                onPressed: _showDeleteConfirmation,
+              ),
             ),
           ],
         ),

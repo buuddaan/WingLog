@@ -12,7 +12,7 @@ import java.util.UUID;
 @RequestMapping("/internal")
 public class InternalAuthController {
     private final AuthService authService;
-    @Value("${internal.secret}")
+    @Value("${INTERNAL_SECRET}")
     private String internalSecret;
 
     public InternalAuthController(AuthService authService) {
@@ -20,7 +20,7 @@ public class InternalAuthController {
     }
 
     @DeleteMapping("/users/{userId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID userId, @RequestHeader("X-Internal-Secret") String secret) {
+    public ResponseEntity<Void> deleteUser(@PathVariable("userId") UUID userId, @RequestHeader("X-Internal-Secret") String secret) {
         if(!internalSecret.equals(secret)){
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
