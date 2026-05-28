@@ -437,12 +437,17 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     );
 
     if (shouldDelete == true) {
+      // Sätt laddningsskärm så användaren inte kan trycka på annat medan vi raderar från molnet
+      setState(() => isLoading = true);
+
       await _deleteSession();
+
       if (mounted) {
         setState(() {
           sessionImages.clear();
           selectedIndices.clear();
           isViewingImage = false;
+          isLoading = false; // Ta bort laddningsskärmen
         });
       }
     }
@@ -451,10 +456,22 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   Future<void> _deleteSession() async {
     try {
       final token = await TokenService.getToken();
+
+      // 1. Radera alla bilder individuellt för att säkerställa att Cloudinary rensas
+      for (var image in sessionImages) {
+        final imageId = image.imageId;
+        await http.delete(
+          Uri.parse('$_baseUrl/photos/delete-image?imageId=$imageId'),
+          headers: {'Authorization': 'Bearer $token'},
+        );
+      }
+
+      // 2. Radera själva sessionen i backend (ifall din databas håller koll på den)
       await http.delete(
         Uri.parse('$_baseUrl/photos/delete-session?sessionId=$sessionId'),
         headers: {'Authorization': 'Bearer $token'},
       );
+
     } catch (exception) {
       debugPrint('Fel vid radering av session: $exception');
     }
