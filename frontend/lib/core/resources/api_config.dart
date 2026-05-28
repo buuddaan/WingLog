@@ -7,7 +7,7 @@ class ApiConfig {
   // Ändra till 'true' när du kodar lokalt mot Docker på din Mac.
   // Ändra till 'false' när du vill bygga/testa mot den skarpa servern!
   // ===================================================================
-  static const bool useLocalBackend = true;
+  static const bool useLocalBackend = false;
 
   // Din Macs lokala IP på nätverket (byt om du byter Wi-Fi)
   static const String _macLocalIp = '192.168.1.241';
