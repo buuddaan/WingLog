@@ -22,4 +22,6 @@ public interface BirdImageRepository extends JpaRepository<BirdImage, UUID> {
     void deleteByIdAndUserId(UUID imageId, UUID userId);
 
     void deleteByFolderNameAndUserId(String folderName, UUID userId);
+
+    void deleteByUserId(UUID userId);
 }

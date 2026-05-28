@@ -48,6 +48,7 @@ dependencies:
   camera_macos: ^0.0.9
   uuid: ^4.5.3
   permission_handler: ^12.0.1
+  http_parser: ^4.1.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

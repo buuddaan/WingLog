@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -197,7 +198,7 @@ public class AuthService {
      * @throws ResponseStatusException om användaren inte hittas
      */
     @Transactional
-    public void deleteUser(UUID userId) {
+    public void deleteUser(@PathVariable("userId")UUID userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Användaren hittades inte"));
         passwordResetTokenRepository.deleteByEmail(user.getEmail());
         userRepository.deleteById(userId);

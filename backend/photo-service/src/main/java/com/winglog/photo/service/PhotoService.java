@@ -5,6 +5,7 @@ import com.winglog.photo.dto.ImageResponse;
 import com.winglog.photo.dto.UploadImageRequest;
 import com.winglog.photo.model.BirdImage;
 import com.winglog.photo.repository.BirdImageRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -160,15 +161,21 @@ public class PhotoService {
         birdImageRepository.deleteByFolderNameAndUserId(folderName, userId);
     }
 
-    @org.springframework.transaction.annotation.Transactional
-    public void deleteAllByUserId(UUID userId) throws IOException {
+    @Transactional
+    public void deleteAllByUserId(UUID userId) {
         List<BirdImage> images = birdImageRepository.findByUserId(userId);
-        for(BirdImage image : images) {
-            storageService.deleteImage(image.getPublicId());
-        }
 
         for (BirdImage image : images) {
-            birdImageRepository.deleteByIdAndUserId(image.getId(), userId);
+            try {
+                // Försök radera bilden i molnet/storage
+                storageService.deleteImage(image.getPublicId());
+            } catch (Exception e) {
+                // Logga felet men låt loopen fortsätta så databasen städas upp
+                System.err.println("Kunde inte radera bild i molnet: " + e.getMessage());
+            }
         }
+
+        // radera poster för användaren i databasen
+        birdImageRepository.deleteByUserId(userId);
     }
 }

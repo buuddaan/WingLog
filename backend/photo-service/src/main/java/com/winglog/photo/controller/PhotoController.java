@@ -131,7 +131,7 @@ public class PhotoController {
         try {
             photoService.deleteAllByUserId(userId);
             return ResponseEntity.noContent().build();
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
     }
