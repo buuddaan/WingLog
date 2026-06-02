@@ -26,12 +26,6 @@ public class RoutingController {
     @Value("${user-service.url}")
     private String userServiceUrl;
 
-    @Value("${post-service.url}")
-    private String postServiceUrl;
-
-    @Value("${forum-service.url}")
-    private String forumServiceUrl;
-
     @Value("${geo-service.url}")
     private String geoServiceUrl;
 
