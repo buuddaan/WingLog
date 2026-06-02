@@ -16,8 +16,6 @@ class RoutingControllerTest {
         // Sätter de @Value-injicerade URLerna manuellt eftersom Spring inte körs i unit test /EF
         ReflectionTestUtils.setField(controller, "authServiceUrl", "http://localhost:8081");
         ReflectionTestUtils.setField(controller, "userServiceUrl", "http://localhost:8082");
-        ReflectionTestUtils.setField(controller, "postServiceUrl", "http://localhost:8083");
-        ReflectionTestUtils.setField(controller, "forumServiceUrl", "http://localhost:8084");
         ReflectionTestUtils.setField(controller, "geoServiceUrl", "http://localhost:8085");
         ReflectionTestUtils.setField(controller, "photoServiceUrl", "http://localhost:8086");
         ReflectionTestUtils.setField(controller, "audioServiceUrl", "http://localhost:8087");

@@ -58,12 +58,10 @@ application-local.yml
 
 .env
 .env.local
+!.env.example
 
 **/application-local.properties
 *-local.properties
 
-<<<<<<< photo-service/identify-bird
 **/credentials.json
-=======
 /excluded-files/
->>>>>>> main
