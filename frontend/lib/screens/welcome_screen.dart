@@ -113,7 +113,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   // --- HÄR ÄR DEN NYA GOOGLE-INLOGGNINGEN --- // Axel, denna ändras efter API config för att lösa telefon google?
-  String get _googleLoginUrl => 'https://winglog.duckdns.org/oauth2/authorization/google';
+  String get _googleLoginUrl => 'GOOGLE_URL';
 
   Future<void> _handleGoogleSignIn() async {
     final Uri googleLoginUri = Uri.parse(_googleLoginUrl);
