@@ -1,6 +1,14 @@
 # WingLog
 
-Backend is a Spring Boot is a microservice architecture; frontend is Flutter (web build served via nginx).
+Backend is a Spring Boot microservice architecture; frontend is Flutter, run live with `flutter run` on port 3000.
+
+## Overview
+- Spring Boot microservice backend (7 services + API gateway) with a Flutter frontend.
+- JWT auth with Google OAuth; gateway-level routing, JWT validation.
+- Application for birdwatchers to store pictures, identify bird species by image or sound, a geo-location pinning feature to share where sightings of birds have taken place.
+- Backend runs in Docker; frontend runs live via `flutter run` on port 3000.
+- Authors: PVT15 Group 2.
+
 
 ## Architecture
 
@@ -13,7 +21,7 @@ Backend is a Spring Boot is a microservice architecture; frontend is Flutter (we
 | photo-service | 8086 | Photo upload (Cloudinary)            |
 | audio-service | 8087 | Audio records, calls birdnet         |
 | birdnet       | 5000 | Python/Flask bird-sound ID           |
-| frontend      | 8090 | Flutter web (nginx)                  |
+| frontend      | 3000 | Flutter web                          |
 
 
 ## Prerequisites
@@ -21,7 +29,7 @@ Backend is a Spring Boot is a microservice architecture; frontend is Flutter (we
 - Docker + Docker Compose
 - A PostgreSQL instance with the PostGIS extension (see Database setup)
 - A Google OAuth client (see OAuth setup)
-- Flutter SDK 3.44.1 or newer (Dart 3.11.4+) — required by the `record` package
+- Flutter SDK and (Dart 3.11.4+) — required by the `record` package
 
 
 ## Database setup
@@ -39,11 +47,11 @@ geometry columns and will fail to start without it:
 ```sql
 CREATE EXTENSION IF NOT EXISTS postgis;
 ```
-**Note on SSL.** The services connect with `sslmode=require`, so your
-PostgreSQL instance must have SSL enabled. Managed providers such as Supabase
-have this on by default. A plain local Postgres usually does not, and will
-fail with "The server does not support SSL" — either enable SSL on it or use
-a provider that has it.
+**Note on SSL.** The `sslmode` in `SPRING_DATASOURCE_URL` must match your
+database. The shipped `.env.example` uses `sslmode=disable` for a plain local
+Postgres. For a provider with SSL (e.g. Supabase, on by default), change it to
+`sslmode=require`. A mismatch fails with "The server does not support SSL".
+
 
 **3. Creating the schemas.** Each service writes to its own schema:
 
@@ -97,34 +105,38 @@ cp backend/.env.example backend/.env
    shipped — all values are your own.
 
 
-## Build the frontend
+## Frontend (development)
 
-The frontend is **not** run with `flutter run` — it is compiled to a static web
-build that Docker serves through nginx on port 8090. You must build it once
-before starting Docker (the build output is not committed):
+The frontend runs live with Flutter on port 3000. The port matters:
+`APP_FRONTEND_URL` in `.env` must match it, otherwise Google OAuth redirects to
+the wrong place after login (blank screen with `?code=...` in the URL).
 
-​```bash
+```bash
 cd frontend
-flutter pub get      # downloads dependencies
-flutter build web    # compiles to frontend/build/web, which Docker mounts
-cd ..
-​```
+flutter pub get                       # downloads dependencies
+flutter run -d chrome --web-port=3000
+```
 
 If you don't have Flutter installed, follow
-https://docs.flutter.dev/get-started/install first. Verify with `flutter --version`
-(SDK 3.44.1 / Dart 3.11.4 or newer — required by the `record` package).
-The app is not reachable until you run Docker (see Run); there is no separate
-frontend server to start.
+https://docs.flutter.dev/get-started/install first and verify with
+`flutter --version` (Dart 3.11.4 or newer — required by the `record` package).
 
 
 ## Run
 
-From the `backend/` directory:
+Start the backend and frontend separately.
+
+**Backend** (from the `backend/` directory):
 ```bash
 docker compose up --build
 ```
 
-- Frontend: http://localhost:8090
+**Frontend** (from the `frontend/` directory):
+```bash
+flutter run -d chrome --web-port=3000
+```
+
+- Frontend: http://localhost:3000
 - API gateway: http://localhost:8080
 
 ## Environment variables
