@@ -1,22 +1,13 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  // Hämtar värdena från din .env-fil vid kompilering
-  static const bool useLocalBackend = bool.fromEnvironment(
-    'USE_LOCAL_BACKEND',
-  );
+static const bool useLocalBackend = true;
 
-  static const String _prodBaseUrl = String.fromEnvironment(
-    'PROD_BASE_URL',
-  );
+static const String _prodBaseUrl = 'https://winglog.duckdns.org/gateway';
 
-  static const String _localhost = String.fromEnvironment(
-    'LOCALHOST',
-  );
+static const String _localhost = 'http://localhost:8080/gateway';
 
-  static const String _phoneDeployed = String.fromEnvironment(
-    'PHONE_DEPLOYED',
-  );
+static const String _phoneDeployed = 'http://192.168.1.241:8080/gateway';
 
   static String get baseUrl {
     if (!useLocalBackend) {
