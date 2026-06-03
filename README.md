@@ -21,7 +21,7 @@ Backend is a Spring Boot is a microservice architecture; frontend is Flutter (we
 - Docker + Docker Compose
 - A PostgreSQL instance with the PostGIS extension (see Database setup)
 - A Google OAuth client (see OAuth setup)
-- Flutter SDK 3.44.1 or newer (Dart 3.12.0+) — required by the `record` package
+- Flutter SDK 3.44.1 or newer (Dart 3.11.4+) — required by the `record` package
 
 
 ## Database setup
@@ -39,8 +39,13 @@ geometry columns and will fail to start without it:
 ```sql
 CREATE EXTENSION IF NOT EXISTS postgis;
 ```
+**Note on SSL.** The services connect with `sslmode=require`, so your
+PostgreSQL instance must have SSL enabled. Managed providers such as Supabase
+have this on by default. A plain local Postgres usually does not, and will
+fail with "The server does not support SSL" — either enable SSL on it or use
+a provider that has it.
 
-**3. Create the schemas.** Each service writes to its own schema:
+**3. Creating the schemas.** Each service writes to its own schema:
 
 ```sql
 CREATE SCHEMA IF NOT EXISTS public;
@@ -52,6 +57,7 @@ CREATE SCHEMA IF NOT EXISTS audio_schema;
 
 After this, the tables themselves are created on first startup. Point the
 `DB_*` variables in your `.env` at this database.
+
 
 ## OAuth setup
 
@@ -69,6 +75,18 @@ base64-encode it into `GOOGLE_CREDENTIALS_JSON`:
 base64 -i service-account.json
 ```
 
+## Cloudinary setup
+
+photo-service stores uploaded images on Cloudinary. Create a free account at
+https://cloudinary.com/users/register_free and open the **Dashboard**. Under
+**Account Details** (or **API Keys**) you will find the three values to put in
+your `.env`:
+
+- `CLOUDINARY_CLOUD_NAME` — the "Cloud name" shown at the top of the dashboard
+- `CLOUDINARY_API_KEY` — the "API Key"
+- `CLOUDINARY_API_SECRET` — the "API Secret" (click to reveal)
+
+
 ## Configuration
 
 1. Copy the example env file and fill in your own values:
@@ -81,15 +99,23 @@ cp backend/.env.example backend/.env
 
 ## Build the frontend
 
-The frontend is served as a Flutter web build. Build it before starting Docker
-(the build output is not committed):
+The frontend is **not** run with `flutter run` — it is compiled to a static web
+build that Docker serves through nginx on port 8090. You must build it once
+before starting Docker (the build output is not committed):
 
-```bash
+​```bash
 cd frontend
-flutter pub get
-flutter build web
+flutter pub get      # downloads dependencies
+flutter build web    # compiles to frontend/build/web, which Docker mounts
 cd ..
-```
+​```
+
+If you don't have Flutter installed, follow
+https://docs.flutter.dev/get-started/install first. Verify with `flutter --version`
+(SDK 3.44.1 / Dart 3.11.4 or newer — required by the `record` package).
+The app is not reachable until you run Docker (see Run); there is no separate
+frontend server to start.
+
 
 ## Run
 
@@ -107,3 +133,9 @@ See `backend/.env.example` for the complete list with descriptions. Key groups:
 database (`DB_*`, `SPRING_DATASOURCE_*`), JWT (`JWT_*`), Google OAuth
 (`GOOGLE_*`, `OAUTH_REDIRECT_URI`, `APP_FRONTEND_URL`), Cloudinary
 (`CLOUDINARY_*`), mail (`SPRING_MAIL_*`), and `INTERNAL_SECRET`.
+
+**`INTERNAL_SECRET`** is a shared secret the backend services use to
+authenticate internal calls to each other (e.g. user-service → auth-service).
+You can pick any string — there are no format or length requirements — but you
+must use the **same value across all services**, and you should change it from
+the example value.
